@@ -114,13 +114,89 @@
 
 Refer to the files below, in the order specified, for more details:
 
-1. [api_consumer.py](frontend/api_consumer.py)
+1. [api_consumwhen er.py](frontend/api_consumer.py)
 2. [api.py](api.py)
 3. [api_consumer_from_dev_flask.py](frontend/api_consumer_from_dev_flask.py)
 4. [api_test_DT_classifier.html](frontend/api_test_DT_classifier.html)
+
+## API Usage Examples
+
+### Classification models
+
+Below are sample cURL commands to call some of the endpoints. The JSON body should contain three numeric fields:
+`monthly_fee`, `customer_age`, and `support_calls`.
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/v1/models/naive-bayes-classifier/predictions \
+  -H "Content-Type: application/json" \
+  -d '{"monthly_fee": 60, "customer_age": 30, "support_calls": 1}'
+```
+
+Replace `naive-bayes-classifier` with `knn-classifier`, `random-forest-classifier`,
+`svm-classifier`, or `decision-tree-classifier` as desired.
+
+### Cluster prediction
+
+The k‑Means cluster model uses the same three numeric inputs.
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/v1/models/kmeans-cluster/predictions \
+  -H "Content-Type: application/json" \
+  -d '{"monthly_fee": 60, "customer_age": 30, "support_calls": 1}'
+```
+
+### Recommendations
+
+Send a list of previously purchased `items` (strings). The API returns
+products that commonly appear together with the supplied basket.
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/v1/recommendations \
+  -H "Content-Type: application/json" \
+  -d '{"items": ["milk", "bread"]}'
+```
+
+
+*Note:* the models and rules are loaded from the `model/` directory. Make sure
+`kmeans_model.pkl` and `assoc_rules.pkl` exist before calling the corresponding
+endpoints.
 5. [api_test_DT_regressor.html](frontend/api_test_DT_regressor.html)
 6. [Reverse Proxy Server and Application Server Setup](app_server_reverse_proxy_server_setup.md)
 7. [Publicly Serving the Model for Validation by Domain Experts](publicly_serving_the_model_for_validation_by_domain_experts.md)
+
+## API Endpoints (examples)
+
+The Flask application exposes several `/api/v1/models/.../predictions` endpoints.
+Each endpoint accepts a POST request with JSON body containing:
+
+```json
+{
+  "monthly_fee": <number>,
+  "customer_age": <number>,
+  "support_calls": <number>
+}
+```
+
+Replace the model name in the URL to invoke a specific classifier:
+
+| Model                                 | URL suffix                             |
+|---------------------------------------|----------------------------------------|
+| Decision‑tree classifier (baseline)   | `decision-tree-classifier`             |
+| Naive Bayes classifier                | `naive-bayes-classifier`               |
+| k‑Nearest neighbours classifier       | `knn-classifier`                       |
+| Random forest classifier              | `random-forest-classifier`             |
+| Support‑vector‑machine classifier     | `svm-classifier`                       |
+
+Example `curl` command (without HTTPS):
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/v1/models/knn-classifier/predictions \
+  -H "Content-Type: application/json" \
+  -d '{"monthly_fee":60, "customer_age":30, "support_calls":1}'
+```
+
+The response is JSON containing the predicted class.
+
 
 ## Lab Submission Instructions
 
