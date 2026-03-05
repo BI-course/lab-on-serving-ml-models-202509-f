@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Model Prediction Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 150px;
+        }
+
+        .tab-button:hover {
+            background: #e8e8e8;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button.submit {
+            flex: 1;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button.submit:hover {
+            transform: translateY(-2px);
+        }
+
+        button.submit:active {
+            transform: translateY(0);
+        }
+
+        button.clear {
+            flex: 1;
+            padding: 12px 24px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button.clear:hover {
+            background: #e8e8e8;
+            border-color: #d0d0d0;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-container.error {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+        }
+
+        .result-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .result-container.error .result-value {
+            color: #ff6b6b;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .items-input {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 0.95em;
+        }
+
+        .sample-data {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 8px;
+            font-size: 0.85em;
+            font-family: monospace;
+            color: #555;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .sample-data:hover {
+            background: #e0e0e0;
+        }
+
+        .api-endpoint {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: #666;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 ML Model Prediction Dashboard</h1>
+            <p>Test all API endpoints for Machine Learning Models</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('classifiers')">Classification Models</button>
+            <button class="tab-button" onclick="switchTab('kmeans')">K-Means Clustering</button>
+            <button class="tab-button" onclick="switchTab('regressor')">Decision Tree Regressor</button>
+            <button class="tab-button" onclick="switchTab('recommender')">Product Recommender</button>
+        </div>
+
+        <!-- Classification Models Tab -->
+        <div id="classifiers" class="content active">
+            <div class="info-box">
+                <strong>Classification Models:</strong> Predict customer churn based on monthly fee, customer age, and support calls.
+            </div>
+
+            <div class="form-group">
+                <label for="classifier-type">Select Model:</label>
+                <select id="classifier-type">
+                    <option value="decision-tree">Decision Tree Classifier</option>
+                    <option value="naive-bayes">Naive Bayes Classifier</option>
+                    <option value="knn">k-Nearest Neighbors (kNN)</option>
+                    <option value="random-forest">Random Forest Classifier</option>
+                    <option value="svm">Support Vector Machine (SVM)</option>
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="monthly-fee">Monthly Fee ($):</label>
+                    <input type="number" id="monthly-fee" placeholder="e.g., 60" step="0.01" required>
+                    <div class="sample-data" onclick="setClassifierSample()">📋 Use Sample Data</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-age">Customer Age (years):</label>
+                    <input type="number" id="customer-age" placeholder="e.g., 30" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="support-calls">Support Calls:</label>
+                    <input type="number" id="support-calls" placeholder="e.g., 1" step="1" required>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="submit" onclick="predictClassifier()">Predict</button>
+                <button class="clear" onclick="clearClassifierForm()">Clear</button>
+            </div>
+
+            <div class="loading" id="classifier-loading">
+                <div class="spinner"></div> Processing...
+            </div>
+
+            <div class="result-container" id="classifier-result"></div>
+            <div class="api-endpoint" id="classifier-endpoint"></div>
+        </div>
+
+        <!-- K-Means Clustering Tab -->
+        <div id="kmeans" class="content">
+            <div class="info-box">
+                <strong>K-Means Clustering:</strong> Predict which cluster a customer belongs to based on their profile.
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="kmeans-monthly-fee">Monthly Fee ($):</label>
+                    <input type="number" id="kmeans-monthly-fee" placeholder="e.g., 60" step="0.01" required>
+                    <div class="sample-data" onclick="setKMeansSample()">📋 Use Sample Data</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="kmeans-customer-age">Customer Age (years):</label>
+                    <input type="number" id="kmeans-customer-age" placeholder="e.g., 30" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="kmeans-support-calls">Support Calls:</label>
+                    <input type="number" id="kmeans-support-calls" placeholder="e.g., 1" step="1" required>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="submit" onclick="predictKMeans()">Predict Cluster</button>
+                <button class="clear" onclick="clearKMeansForm()">Clear</button>
+            </div>
+
+            <div class="loading" id="kmeans-loading">
+                <div class="spinner"></div> Processing...
+            </div>
+
+            <div class="result-container" id="kmeans-result"></div>
+            <div class="api-endpoint" id="kmeans-endpoint"></div>
+        </div>
+
+        <!-- Decision Tree Regressor Tab -->
+        <div id="regressor" class="content">
+            <div class="info-box">
+                <strong>Decision Tree Regressor:</strong> Predict profit percentage per unit based on business metrics.
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="customer-type">Customer Type:</label>
+                    <select id="customer-type">
+                        <option value="">Select...</option>
+                        <option value="Business">Business</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Corporate">Corporate</option>
+                    </select>
+                    <div class="sample-data" onclick="setRegressorSample()">📋 Use Sample Data</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="branch-sub-county">Branch Sub-County:</label>
+                    <input type="text" id="branch-sub-county" placeholder="e.g., Kilimani" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-category">Product Category Name:</label>
+                    <input type="text" id="product-category" placeholder="e.g., Meat-Based Dishes" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity-ordered">Quantity Ordered:</label>
+                    <input type="number" id="quantity-ordered" placeholder="e.g., 8" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="payment-date">Payment Date:</label>
+                    <input type="date" id="payment-date" required>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="submit" onclick="predictRegressor()">Predict Profit %</button>
+                <button class="clear" onclick="clearRegressorForm()">Clear</button>
+            </div>
+
+            <div class="loading" id="regressor-loading">
+                <div class="spinner"></div> Processing...
+            </div>
+
+            <div class="result-container" id="regressor-result"></div>
+            <div class="api-endpoint" id="regressor-endpoint"></div>
+        </div>
+
+        <!-- Product Recommender Tab -->
+        <div id="recommender" class="content">
+            <div class="info-box">
+                <strong>Product Recommender:</strong> Get product recommendations based on previously purchased items.
+            </div>
+
+            <div class="form-group">
+                <label for="purchased-items">Previously Purchased Items (comma-separated IDs):</label>
+                <textarea class="items-input" id="purchased-items" placeholder="e.g., product_1, product_2, product_3"></textarea>
+                <div class="sample-data" onclick="setRecommenderSample()">📋 Use Sample Data</div>
+            </div>
+
+            <div class="button-group">
+                <button class="submit" onclick="predictRecommender()">Get Recommendations</button>
+                <button class="clear" onclick="clearRecommenderForm()">Clear</button>
+            </div>
+
+            <div class="loading" id="recommender-loading">
+                <div class="spinner"></div> Processing...
+            </div>
+
+            <div class="result-container" id="recommender-result"></div>
+            <div class="api-endpoint" id="recommender-endpoint"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://127.0.0.1:5000'; // Change this to Render URL when deployed
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Classification Models
+        function setClassifierSample() {
+            document.getElementById('monthly-fee').value = 60;
+            document.getElementById('customer-age').value = 30;
+            document.getElementById('support-calls').value = 1;
+        }
+
+        function clearClassifierForm() {
+            document.getElementById('monthly-fee').value = '';
+            document.getElementById('customer-age').value = '';
+            document.getElementById('support-calls').value = '';
+            document.getElementById('classifier-result').classList.remove('show');
+        }
+
+        async function predictClassifier() {
+            const modelType = document.getElementById('classifier-type').value;
+            const monthlyFee = document.getElementById('monthly-fee').value;
+            const customerAge = document.getElementById('customer-age').value;
+            const supportCalls = document.getElementById('support-calls').value;
+
+            if (!monthlyFee || !customerAge || !supportCalls) {
+                showResult('classifier', 'Please fill in all fields', true);
+                return;
+            }
+
+            const endpoint = `/api/v1/models/${modelType}-classifier/predictions`;
+            const data = {
+                monthly_fee: parseFloat(monthlyFee),
+                customer_age: parseFloat(customerAge),
+                support_calls: parseFloat(supportCalls)
+            };
+
+            await makeAPICall('classifier', endpoint, data);
+        }
+
+        // K-Means
+        function setKMeansSample() {
+            document.getElementById('kmeans-monthly-fee').value = 60;
+            document.getElementById('kmeans-customer-age').value = 30;
+            document.getElementById('kmeans-support-calls').value = 1;
+        }
+
+        function clearKMeansForm() {
+            document.getElementById('kmeans-monthly-fee').value = '';
+            document.getElementById('kmeans-customer-age').value = '';
+            document.getElementById('kmeans-support-calls').value = '';
+            document.getElementById('kmeans-result').classList.remove('show');
+        }
+
+        async function predictKMeans() {
+            const monthlyFee = document.getElementById('kmeans-monthly-fee').value;
+            const customerAge = document.getElementById('kmeans-customer-age').value;
+            const supportCalls = document.getElementById('kmeans-support-calls').value;
+
+            if (!monthlyFee || !customerAge || !supportCalls) {
+                showResult('kmeans', 'Please fill in all fields', true);
+                return;
+            }
+
+            const data = {
+                monthly_fee: parseFloat(monthlyFee),
+                customer_age: parseFloat(customerAge),
+                support_calls: parseFloat(supportCalls)
+            };
+
+            await makeAPICall('kmeans', '/api/v1/models/kmeans-cluster/predictions', data);
+        }
+
+        // Regressor
+        function setRegressorSample() {
+            document.getElementById('customer-type').value = 'Business';
+            document.getElementById('branch-sub-county').value = 'Kilimani';
+            document.getElementById('product-category').value = 'Meat-Based Dishes';
+            document.getElementById('quantity-ordered').value = 8;
+            document.getElementById('payment-date').value = '2027-11-13';
+        }
+
+        function clearRegressorForm() {
+            document.getElementById('customer-type').value = '';
+            document.getElementById('branch-sub-county').value = '';
+            document.getElementById('product-category').value = '';
+            document.getElementById('quantity-ordered').value = '';
+            document.getElementById('payment-date').value = '';
+            document.getElementById('regressor-result').classList.remove('show');
+        }
+
+        async function predictRegressor() {
+            const customerType = document.getElementById('customer-type').value;
+            const branchSubCounty = document.getElementById('branch-sub-county').value;
+            const productCategory = document.getElementById('product-category').value;
+            const quantityOrdered = document.getElementById('quantity-ordered').value;
+            const paymentDate = document.getElementById('payment-date').value;
+
+            if (!customerType || !branchSubCounty || !productCategory || !quantityOrdered || !paymentDate) {
+                showResult('regressor', 'Please fill in all fields', true);
+                return;
+            }
+
+            const data = {
+                CustomerType: customerType,
+                BranchSubCounty: branchSubCounty,
+                ProductCategoryName: productCategory,
+                QuantityOrdered: parseFloat(quantityOrdered),
+                PaymentDate: paymentDate
+            };
+
+            await makeAPICall('regressor', '/api/v1/models/decision-tree-regressor/predictions', data);
+        }
+
+        // Recommender
+        function setRecommenderSample() {
+            document.getElementById('purchased-items').value = 'product_1, product_2, product_3';
+        }
+
+        function clearRecommenderForm() {
+            document.getElementById('purchased-items').value = '';
+            document.getElementById('recommender-result').classList.remove('show');
+        }
+
+        async function predictRecommender() {
+            const itemsText = document.getElementById('purchased-items').value.trim();
+
+            if (!itemsText) {
+                showResult('recommender', 'Please enter at least one product ID', true);
+                return;
+            }
+
+            const items = itemsText.split(',').map(item => item.trim());
+            const data = { items };
+
+            await makeAPICall('recommender', '/api/v1/recommendations', data);
+        }
+
+        // API Call Handler
+        async function makeAPICall(tabName, endpoint, data) {
+            const loading = document.getElementById(`${tabName}-loading`);
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    showResult(tabName, `Error: ${result.error || 'Unknown error'}`, true);
+                } else {
+                    let resultText = '';
+                    if (result.error) {
+                        showResult(tabName, `Error: ${result.error}`, true);
+                    } else if (result['Predicted Class = '] !== undefined) {
+                        resultText = `Predicted Class: <strong>${result['Predicted Class = ']}</strong>`;
+                        showResult(tabName, resultText, false);
+                    } else if (result.cluster !== undefined) {
+                        resultText = `Cluster ID: <strong>${result.cluster}</strong>`;
+                        showResult(tabName, resultText, false);
+                    } else if (result['Predicted Percentage Profit per Unit = '] !== undefined) {
+                        resultText = `Predicted Profit %: <strong>${result['Predicted Percentage Profit per Unit = '].toFixed(2)}%</strong>`;
+                        showResult(tabName, resultText, false);
+                    } else if (result.recommendations) {
+                        resultText = `Recommended Products: <strong>${result.recommendations.join(', ')}</strong>`;
+                        showResult(tabName, resultText, false);
+                    } else {
+                        resultText = `Result: <strong>${JSON.stringify(result)}</strong>`;
+                        showResult(tabName, resultText, false);
+                    }
+                }
+
+                // Show API endpoint
+                const endpointDiv = document.getElementById(`${tabName}-endpoint`);
+                endpointDiv.innerHTML = `<strong>API Endpoint:</strong> POST ${API_BASE_URL}${endpoint}`;
+            } catch (error) {
+                showResult(tabName, `Error: ${error.message}`, true);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function showResult(tabName, message, isError) {
+            const resultDiv = document.getElementById(`${tabName}-result`);
+            resultDiv.innerHTML = `<div class="result-title">${isError ? '❌ Error' : '✅ Prediction Result'}</div><div class="result-value">${message}</div>`;
+            resultDiv.classList.add('show');
+            if (isError) {
+                resultDiv.classList.add('error');
+            } else {
+                resultDiv.classList.remove('error');
+            }
+        }
+
+        // Set default date to today
+        window.addEventListener('load', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('payment-date').value = today;
+        });
+    </script>
+</body>
+</html>
