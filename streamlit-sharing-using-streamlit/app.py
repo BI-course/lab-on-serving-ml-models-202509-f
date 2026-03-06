@@ -139,7 +139,7 @@ with tab2:
         new_data = new_data[expected_features]
 
         # Predict
-        prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
+        #prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
 
         # Output Result
         st.divider()
@@ -148,7 +148,7 @@ with tab2:
         st.write(new_data[col])
         st.write(label_encoders_1b[col].classes_)
 
-        st.success(f"Churn Prediction: {prediction_regressor}")
+        #st.success(f"Churn Prediction: {prediction_regressor}")
         #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
