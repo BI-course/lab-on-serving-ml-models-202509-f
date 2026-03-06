@@ -222,52 +222,16 @@ with tab3:
         # Scale the features
         new_data_scaled = scaler.transform(new_data_preprocessed)
 
-        # Predict
-        prediction = knnmodel.predict(new_data_scaled)[0]
-
         # Make predictions
-        # predictions = knn_classifier_optimum.predict(new_data_scaled)
-        # probabilities = knn_classifier_optimum.predict_proba(new_data_scaled)
+        predictionknn = knnmodel.predict(new_data_scaled)[0]
 
-        # # Add predictions and probabilities of the predictions to the original dataframe
-        # new_data['Late_Delivery_Probability_Class_0'] = probabilities[:, 0]  # Probability of on-time delivery
-        # new_data['Late_Delivery_Probability_Class_1'] = probabilities[:, 1]  # Probability of late delivery
-        # new_data['Predicted_Late_Delivery'] = predictions
-
-
-
-        # # Feature Engineering (Date)
-        # # We can use the date attributes directly since 'payment_date' is already a date object
-        # new_data['PaymentDate_year'] = payment_date.year
-        # new_data['PaymentDate_month'] = payment_date.month
-        # new_data['PaymentDate_day'] = payment_date.day
-        # new_data['PaymentDate_dayofweek'] = payment_date.weekday()
-
-        # # Encode Categorical Columns
-        # # Note: Ensure 'label_encoders_1b' and your model are loaded in your script
-        # categorical_cols = ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']
-        # for col in categorical_cols:
-        #     new_data[col] = label_encoders_1b[col].transform(new_data[col])
-
-        # # Reorder to match training (expected_features)
-        # expected_features = [
-        #     'CustomerType', 'BranchSubCounty', 'ProductCategoryName', 
-        #     'QuantityOrdered', 'PaymentDate_year', 'PaymentDate_month', 
-        #     'PaymentDate_day', 'PaymentDate_dayofweek'
-        # ]
-        # new_data = new_data[expected_features]
-
-        # # Predict
-        # prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
-
-        # # Output Result
-        # st.divider()
+        
 
         st.write(col)
         st.write(new_data[col])
         st.write(label_encoders_1b[col].classes_)
 
-        st.success(f"Prediction: {prediction}")
+        st.success(f"Prediction: {predictionknn}")
         # #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
