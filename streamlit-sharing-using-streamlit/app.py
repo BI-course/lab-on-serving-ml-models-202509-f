@@ -17,8 +17,8 @@ svmmodel = joblib.load("./model/support_vector_classifier_optimum.pkl")
 decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_optimum.pkl')
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
-
-label_encoders_path = joblib.load('./model/scaler_3.pkl')
+#confirm with Robbi about this
+label_encoders_path = joblib.load('./model/scaler_5.pkl')
 onehot_encoder_path = joblib.load('./model/onehot_encoder_3.pkl')
 
 
