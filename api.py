@@ -59,6 +59,16 @@ knn_classifier_optimum = joblib.load('./model/knn_classifier_optimum.pkl')
 random_forest_classifier_optimum = joblib.load('./model/random_forest_classifier_optimum.pkl')
 support_vector_classifier_optimum = joblib.load('./model/support_vector_classifier_optimum.pkl')
 
+# scalers for kNN and SVM (distance-based models sensitive to feature scaling)
+try:
+    scaler_knn = joblib.load('./model/scaler_4.pkl')
+except FileNotFoundError:
+    scaler_knn = None
+try:
+    scaler_svm = joblib.load('./model/scaler_5.pkl')
+except FileNotFoundError:
+    scaler_svm = None
+
 # advanced models/data for optional endpoints
 # k-Means cluster model (trained elsewhere and saved to disk)
 kmeans_model = joblib.load('./model/kmeans_model.pkl')
@@ -85,9 +95,10 @@ def _validate_items_list(data):
     return True, None
 
 
-def _predict_from_model(model, data):
+def _predict_from_model(model, data, scaler=None):
     """Run prediction against a simple numeric-feature model.
-    Assumes all features are numeric and provided in 'data'."""
+    Assumes all features are numeric and provided in 'data'.
+    If a scaler is provided, applies it before prediction."""
     expected_features = ['monthly_fee', 'customer_age', 'support_calls']
     valid, msg = _validate_numeric_inputs(data, expected_features)
     if not valid:
@@ -96,6 +107,11 @@ def _predict_from_model(model, data):
     # build dataframe keeping column order consistent with training
     new_data = pd.DataFrame([{f: data.get(f) for f in expected_features}])
     new_data = new_data[expected_features]
+    
+    # apply scaler if provided (for distance-based models like kNN and SVM)
+    if scaler is not None:
+        new_data = pd.DataFrame(scaler.transform(new_data), columns=expected_features)
+    
     pred = model.predict(new_data)[0]
     return int(pred), None
 
@@ -129,7 +145,7 @@ def predict_naive_bayes():
 @app.route('/api/v1/models/knn-classifier/predictions', methods=['POST'])
 def predict_knn():
     data = request.get_json()
-    prediction, error = _predict_from_model(knn_classifier_optimum, data)
+    prediction, error = _predict_from_model(knn_classifier_optimum, data, scaler=scaler_knn)
     if error:
         return jsonify({'error': error}), 400
     return jsonify({'Predicted Class = ': prediction})
@@ -147,7 +163,7 @@ def predict_random_forest():
 @app.route('/api/v1/models/svm-classifier/predictions', methods=['POST'])
 def predict_svm():
     data = request.get_json()
-    prediction, error = _predict_from_model(support_vector_classifier_optimum, data)
+    prediction, error = _predict_from_model(support_vector_classifier_optimum, data, scaler=scaler_svm)
     if error:
         return jsonify({'error': error}), 400
     return jsonify({'Predicted Class = ': prediction})
