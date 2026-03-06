@@ -18,7 +18,7 @@ decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_opt
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
 #confirm with Robbi about this
-label_encoders_path = joblib.load('./model/scaler_5.pkl')
+scaler_five = joblib.load('./model/scaler_5.pkl')
 onehot_encoder_path = joblib.load('./model/onehot_encoder_3.pkl')
 
 
@@ -212,7 +212,7 @@ with tab3:
         # # Convert to DataFrame
         new_data = pd.DataFrame([data])
 
-        scaler = StandardScaler()
+        
 
         # One-hot encode 'Shipping Mode'
         encoded = onehot_encoder_path.transform(new_data[['Shipping Mode']])
@@ -220,7 +220,7 @@ with tab3:
         new_data_preprocessed = pd.concat([new_data.drop('Shipping Mode', axis=1), encoded_df], axis=1)
 
         # Scale the features
-        new_data_scaled = scaler.transform(new_data_preprocessed)
+        new_data_scaled = scaler_five.transform(new_data_preprocessed)
 
         # Make predictions
         predictionknn = knnmodel.predict(new_data_scaled)[0]
