@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import date
 import joblib
 import numpy as np
+import pandas as pd
 
 
 # Load trained model
@@ -13,6 +14,7 @@ knnmodel = joblib.load("./model/knn_classifier_optimum.pkl")
 rfcmodel = joblib.load("./model/random_forest_classifier_optimum.pkl")
 svmmodel = joblib.load("./model/support_vector_classifier_optimum.pkl")
 decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_optimum.pkl')
+label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
 
 
@@ -101,20 +103,45 @@ with tab2:
         submit_profit_prediction = st.form_submit_button("Predict Profit")
 
     if submit_profit_prediction:
+        # Build the initial dictionary (mimicking your JSON request)
+        data = {
+            'PaymentDate': payment_date,
+            'CustomerType': customer_type_selection,
+            'BranchSubCounty': branch_sub_county,
+            'ProductCategoryName': product_category_name,
+            'QuantityOrdered': quantity_ordered
+    }
 
-        'CustomerType',
-        'BranchSubCounty',
-        'ProductCategoryName',
-        'QuantityOrdered',
-        'PaymentDate_year',
-        'PaymentDate_month',
-        'PaymentDate_day',
-        'PaymentDate_dayofweek'
+    # Convert to DataFrame
+    new_data = pd.DataFrame([data])
 
-        X = np.array([[customer_type_selection, branch_sub_county, product_category_name,quantity_ordered,year_of_payment,month_of_payment, day_of_payment,day_name ]])
-        prediction = decisiontree_regressor_optimum.predict(X)
+    # Feature Engineering (Date)
+    # We can use the date attributes directly since 'payment_date' is already a date object
+    new_data['PaymentDate_year'] = payment_date.year
+    new_data['PaymentDate_month'] = payment_date.month
+    new_data['PaymentDate_day'] = payment_date.day
+    new_data['PaymentDate_dayofweek'] = payment_date.weekday()
 
-        st.success(f"Profit Prediction: {prediction[0]}")
+    # Encode Categorical Columns
+    # Note: Ensure 'label_encoders_1b' and your model are loaded in your script
+    categorical_cols = ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']
+    for col in categorical_cols:
+        new_data[col] = label_encoders_1b[col].transform(new_data[col])
+
+    # Reorder to match training (expected_features)
+    expected_features = [
+        'CustomerType', 'BranchSubCounty', 'ProductCategoryName', 
+        'QuantityOrdered', 'PaymentDate_year', 'PaymentDate_month', 
+        'PaymentDate_day', 'PaymentDate_dayofweek'
+    ]
+    new_data = new_data[expected_features]
+
+    # Predict
+    prediction = decisiontree_regressor_optimum.predict(new_data)[0]
+
+    # Output Result
+    st.divider()
+    st.subheader(f"Predicted Percentage Profit per Unit: {prediction:.2f}%")
 
 
 # -----------------------------
