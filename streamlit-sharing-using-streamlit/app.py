@@ -18,7 +18,7 @@ decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_opt
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
 #confirm with Robbi about this
-scaler_five = joblib.load('./model/scaler_5.pkl')
+scaler_five = joblib.load('./model/scaler_3.pkl')
 onehot_encoder_path = joblib.load('./model/onehot_encoder_3.pkl')
 
 
