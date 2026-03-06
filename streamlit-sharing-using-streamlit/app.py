@@ -75,7 +75,7 @@ with tab2:
         
         customer_type_selection = st.selectbox(
             "Select Customer Type",
-            options=["Business", "Consumer", "Corporate"],
+            options=["Business", "Individual"],
             index=None,
             placeholder="Choose an option...",
             )
