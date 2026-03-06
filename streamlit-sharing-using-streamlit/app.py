@@ -137,11 +137,13 @@ with tab2:
     new_data = new_data[expected_features]
 
     # Predict
-    prediction = decisiontree_regressor_optimum.predict(new_data)[0]
+    prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
 
     # Output Result
     st.divider()
-    st.subheader(f"Predicted Percentage Profit per Unit: {prediction:.2f}%")
+
+    st.success(f"Churn Prediction: {prediction_regressor}")
+    #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
 # -----------------------------
