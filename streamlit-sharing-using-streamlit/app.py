@@ -3,6 +3,7 @@ from datetime import date
 import joblib
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 
 # Load trained model
@@ -16,6 +17,9 @@ svmmodel = joblib.load("./model/support_vector_classifier_optimum.pkl")
 decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_optimum.pkl')
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
+
+label_encoders_path = './model/scaler_3.pkl'
+onehot_encoder_path = './model/onehot_encoder_3.pkl'
 
 
 # Streamlit page config
@@ -194,17 +198,43 @@ with tab3:
     if submit_lateness_prediction:
         # # Build the initial dictionary (mimicking your JSON request)
         data = {
-            'PaymentDate': payment_date,
-            'CustomerType': customer_type_selection,
-            'BranchSubCounty': branch_sub_county,
-            'ProductCategoryName': product_category_name,
-            'QuantityOrdered': quantity_ordered
+            'Days for shipping (real)': int(days_shipping_real),
+            'Days for shipment (scheduled)': int(days_shipping_scheduled),
+            'Late_delivery_risk':delivery_selection,
+            'Order Item Quantity': int(order_item_quantity),
+            'Sales': int(sales),
+            'Order Profit Per Order': float(order_profit_per_order),
+            'Shipping Mode': shipping_mode
             }
         
         
 
         # # Convert to DataFrame
-        # new_data = pd.DataFrame([data])
+        new_data = pd.DataFrame([data])
+
+        scaler = StandardScaler()
+
+        # One-hot encode 'Shipping Mode'
+        encoded = onehot_encoder_path.transform(new_data[['Shipping Mode']])
+        encoded_df = pd.DataFrame(encoded, columns=onehot_encoder_path.get_feature_names_out(['Shipping Mode']))
+        new_data_preprocessed = pd.concat([new_data.drop('Shipping Mode', axis=1), encoded_df], axis=1)
+
+        # Scale the features
+        new_data_scaled = scaler.transform(new_data_preprocessed)
+
+        # Predict
+        prediction = knnmodel.predict(new_data_scaled)[0]
+
+        # Make predictions
+        # predictions = knn_classifier_optimum.predict(new_data_scaled)
+        # probabilities = knn_classifier_optimum.predict_proba(new_data_scaled)
+
+        # # Add predictions and probabilities of the predictions to the original dataframe
+        # new_data['Late_Delivery_Probability_Class_0'] = probabilities[:, 0]  # Probability of on-time delivery
+        # new_data['Late_Delivery_Probability_Class_1'] = probabilities[:, 1]  # Probability of late delivery
+        # new_data['Predicted_Late_Delivery'] = predictions
+
+
 
         # # Feature Engineering (Date)
         # # We can use the date attributes directly since 'payment_date' is already a date object
@@ -237,7 +267,7 @@ with tab3:
         st.write(new_data[col])
         st.write(label_encoders_1b[col].classes_)
 
-        # st.success(f"Prediction Profit: {prediction_regressor}")
+        st.success(f"Prediction: {prediction}")
         # #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
