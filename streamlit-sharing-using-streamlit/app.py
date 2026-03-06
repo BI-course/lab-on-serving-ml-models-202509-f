@@ -111,6 +111,9 @@ with tab2:
             'ProductCategoryName': product_category_name,
             'QuantityOrdered': quantity_ordered
             }
+        
+        
+
         # Convert to DataFrame
         new_data = pd.DataFrame([data])
 
@@ -140,6 +143,10 @@ with tab2:
 
         # Output Result
         st.divider()
+
+        st.write(col)
+        st.write(new_data[col])
+        st.write(label_encoders_1b[col].classes_)
 
         st.success(f"Churn Prediction: {prediction_regressor}")
         #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
