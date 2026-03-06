@@ -18,8 +18,8 @@ decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_opt
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
 
-label_encoders_path = './model/scaler_3.pkl'
-onehot_encoder_path = './model/onehot_encoder_3.pkl'
+label_encoders_path = joblib.load('./model/scaler_3.pkl')
+onehot_encoder_path = joblib.load('./model/onehot_encoder_3.pkl')
 
 
 # Streamlit page config
@@ -188,7 +188,7 @@ with tab3:
         order_profit_per_order = st.number_input("Order Profit Per Order")
         
         shipping_mode = st.selectbox(
-            "Select Shipping Mode",
+            "Shipping Mode",
             options=["Standard Class", "First Class"],
             index=None,
             placeholder="Choose an option...",
