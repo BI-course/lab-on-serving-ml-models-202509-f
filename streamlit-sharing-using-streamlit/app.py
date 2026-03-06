@@ -110,40 +110,39 @@ with tab2:
             'BranchSubCounty': branch_sub_county,
             'ProductCategoryName': product_category_name,
             'QuantityOrdered': quantity_ordered
-    }
+            }
+        # Convert to DataFrame
+        new_data = pd.DataFrame([data])
 
-    # Convert to DataFrame
-    new_data = pd.DataFrame([data])
+        # Feature Engineering (Date)
+        # We can use the date attributes directly since 'payment_date' is already a date object
+        new_data['PaymentDate_year'] = payment_date.year
+        new_data['PaymentDate_month'] = payment_date.month
+        new_data['PaymentDate_day'] = payment_date.day
+        new_data['PaymentDate_dayofweek'] = payment_date.weekday()
 
-    # Feature Engineering (Date)
-    # We can use the date attributes directly since 'payment_date' is already a date object
-    new_data['PaymentDate_year'] = payment_date.year
-    new_data['PaymentDate_month'] = payment_date.month
-    new_data['PaymentDate_day'] = payment_date.day
-    new_data['PaymentDate_dayofweek'] = payment_date.weekday()
+        # Encode Categorical Columns
+        # Note: Ensure 'label_encoders_1b' and your model are loaded in your script
+        categorical_cols = ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']
+        for col in categorical_cols:
+            new_data[col] = label_encoders_1b[col].transform(new_data[col])
 
-    # Encode Categorical Columns
-    # Note: Ensure 'label_encoders_1b' and your model are loaded in your script
-    categorical_cols = ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']
-    for col in categorical_cols:
-        new_data[col] = label_encoders_1b[col].transform(new_data[col])
+        # Reorder to match training (expected_features)
+        expected_features = [
+            'CustomerType', 'BranchSubCounty', 'ProductCategoryName', 
+            'QuantityOrdered', 'PaymentDate_year', 'PaymentDate_month', 
+            'PaymentDate_day', 'PaymentDate_dayofweek'
+        ]
+        new_data = new_data[expected_features]
 
-    # Reorder to match training (expected_features)
-    expected_features = [
-        'CustomerType', 'BranchSubCounty', 'ProductCategoryName', 
-        'QuantityOrdered', 'PaymentDate_year', 'PaymentDate_month', 
-        'PaymentDate_day', 'PaymentDate_dayofweek'
-    ]
-    new_data = new_data[expected_features]
+        # Predict
+        prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
 
-    # Predict
-    prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
+        # Output Result
+        st.divider()
 
-    # Output Result
-    st.divider()
-
-    st.success(f"Churn Prediction: {prediction_regressor}")
-    #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
+        st.success(f"Churn Prediction: {prediction_regressor}")
+        #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
 # -----------------------------
