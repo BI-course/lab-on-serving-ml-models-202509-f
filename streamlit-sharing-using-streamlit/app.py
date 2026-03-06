@@ -83,7 +83,7 @@ with tab2:
         branch_sub_county = st.text_input("Branch Sub-County", "e.g., Kilimani")
         product_category_name = st.text_input("Product Category Name", "e.g., Meat-Based Dishes")
         quantity_ordered = st.number_input("Quantity Ordered")
-        payment_date = st.date_input("Payment Date", date(2000, 7, 6))
+        payment_date = st.date_input("Payment Date", date(2030, 7, 6))
 
         # 2. Extract Year, Month, and Day
         year_of_payment = payment_date.year
@@ -139,7 +139,7 @@ with tab2:
         new_data = new_data[expected_features]
 
         # Predict
-        #prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
+        prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
 
         # Output Result
         st.divider()
@@ -148,7 +148,7 @@ with tab2:
         st.write(new_data[col])
         st.write(label_encoders_1b[col].classes_)
 
-        #st.success(f"Churn Prediction: {prediction_regressor}")
+        st.success(f"Churn Prediction: {prediction_regressor}")
         #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
