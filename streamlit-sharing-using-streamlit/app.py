@@ -35,10 +35,11 @@ st.title("Dashboard")
 # -----------------------------
 # Tabs for different models
 # -----------------------------
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "Customer Churn",
     "Predict Profit",
-    "Sales Forecast"
+    "Predict Lateness ( KNN )",
+    "Placeholder"
 ])
 
 # -----------------------------
@@ -152,10 +153,100 @@ with tab2:
         #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
 
 
+
+# -----------------------------
+# KNN
+# -----------------------------
+with tab3:
+
+    st.header("Predict Lateness")
+
+    with st.form("predict_lateness"):
+
+        days_shipping_real = st.number_input("Days for shipping (real)")
+        days_shipping_scheduled = st.number_input("Days for shipment (scheduled)")
+        
+        # 1. Define your mapping
+        delivery_mapping = {
+             "Yes": 1,
+             "No": 0
+             }
+        # 2. Display the labels in the dropdown
+        delivery_selection = st.selectbox(
+            "Risk of Late Delivery",
+            options=list(delivery_mapping.keys()), # This shows ["Late", "On Time"]
+            index=None,
+            placeholder="Choose an option..."
+            )
+        order_item_quantity = st.number_input("Order Item Quantity")
+
+        sales = st.number_input("Sales")
+        order_profit_per_order = st.number_input("Order Profit Per Order")
+        
+        shipping_mode = st.selectbox(
+            "Select Shipping Mode",
+            options=["Standard Class", "First Class"],
+            index=None,
+            placeholder="Choose an option...",
+            )
+        submit_lateness_prediction = st.form_submit_button("Predict Lateness")
+
+    if submit_lateness_prediction:
+        # # Build the initial dictionary (mimicking your JSON request)
+        data = {
+            'PaymentDate': payment_date,
+            'CustomerType': customer_type_selection,
+            'BranchSubCounty': branch_sub_county,
+            'ProductCategoryName': product_category_name,
+            'QuantityOrdered': quantity_ordered
+            }
+        
+        
+
+        # # Convert to DataFrame
+        # new_data = pd.DataFrame([data])
+
+        # # Feature Engineering (Date)
+        # # We can use the date attributes directly since 'payment_date' is already a date object
+        # new_data['PaymentDate_year'] = payment_date.year
+        # new_data['PaymentDate_month'] = payment_date.month
+        # new_data['PaymentDate_day'] = payment_date.day
+        # new_data['PaymentDate_dayofweek'] = payment_date.weekday()
+
+        # # Encode Categorical Columns
+        # # Note: Ensure 'label_encoders_1b' and your model are loaded in your script
+        # categorical_cols = ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']
+        # for col in categorical_cols:
+        #     new_data[col] = label_encoders_1b[col].transform(new_data[col])
+
+        # # Reorder to match training (expected_features)
+        # expected_features = [
+        #     'CustomerType', 'BranchSubCounty', 'ProductCategoryName', 
+        #     'QuantityOrdered', 'PaymentDate_year', 'PaymentDate_month', 
+        #     'PaymentDate_day', 'PaymentDate_dayofweek'
+        # ]
+        # new_data = new_data[expected_features]
+
+        # # Predict
+        # prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
+
+        # # Output Result
+        # st.divider()
+
+        st.write(col)
+        st.write(new_data[col])
+        st.write(label_encoders_1b[col].classes_)
+
+        # st.success(f"Prediction Profit: {prediction_regressor}")
+        # #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
+
+
+
+
 # -----------------------------
 # SALES MODEL FORM
 # -----------------------------
-with tab3:
+with tab4:
 
     st.header("Sales Forecast")
 
