@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -191,6 +192,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -235,8 +237,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .info-box {
@@ -287,6 +294,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -304,7 +312,8 @@
         <!-- Classification Models Tab -->
         <div id="classifiers" class="content active">
             <div class="info-box">
-                <strong>Classification Models:</strong> Predict customer churn based on monthly fee, customer age, and support calls.
+                <strong>Classification Models:</strong> Predict customer churn based on monthly fee, customer age, and
+                support calls.
             </div>
 
             <div class="form-group">
@@ -357,19 +366,19 @@
 
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="kmeans-monthly-fee">Monthly Fee ($):</label>
-                    <input type="number" id="kmeans-monthly-fee" placeholder="e.g., 60" step="0.01" required>
+                    <label for="kmeans-age">Customer Age (years):</label>
+                    <input type="number" id="kmeans-age" placeholder="e.g., 30" step="1" required>
                     <div class="sample-data" onclick="setKMeansSample()">📋 Use Sample Data</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="kmeans-customer-age">Customer Age (years):</label>
-                    <input type="number" id="kmeans-customer-age" placeholder="e.g., 30" step="1" required>
+                    <label for="kmeans-income">Annual Income ($):</label>
+                    <input type="number" id="kmeans-income" placeholder="e.g., 60000" step="1" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="kmeans-support-calls">Support Calls:</label>
-                    <input type="number" id="kmeans-support-calls" placeholder="e.g., 1" step="1" required>
+                    <label for="kmeans-spending-score">Spending Score (1-100):</label>
+                    <input type="number" id="kmeans-spending-score" placeholder="e.g., 50" step="1" required>
                 </div>
             </div>
 
@@ -446,7 +455,8 @@
 
             <div class="form-group">
                 <label for="purchased-items">Previously Purchased Items (comma-separated IDs):</label>
-                <textarea class="items-input" id="purchased-items" placeholder="e.g., product_1, product_2, product_3"></textarea>
+                <textarea class="items-input" id="purchased-items"
+                    placeholder="e.g., product_1, product_2, product_3"></textarea>
                 <div class="sample-data" onclick="setRecommenderSample()">📋 Use Sample Data</div>
             </div>
 
@@ -472,7 +482,7 @@
         function switchTab(tabName) {
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
-            
+
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
         }
@@ -514,35 +524,35 @@
 
         // K-Means
         function setKMeansSample() {
-            document.getElementById('kmeans-monthly-fee').value = 60;
-            document.getElementById('kmeans-customer-age').value = 30;
-            document.getElementById('kmeans-support-calls').value = 1;
+            document.getElementById('kmeans-age').value = 30;
+            document.getElementById('kmeans-income').value = 60000;
+            document.getElementById('kmeans-spending-score').value = 50;
         }
 
         function clearKMeansForm() {
-            document.getElementById('kmeans-monthly-fee').value = '';
-            document.getElementById('kmeans-customer-age').value = '';
-            document.getElementById('kmeans-support-calls').value = '';
+            document.getElementById('kmeans-age').value = '';
+            document.getElementById('kmeans-income').value = '';
+            document.getElementById('kmeans-spending-score').value = '';
             document.getElementById('kmeans-result').classList.remove('show');
         }
 
         async function predictKMeans() {
-            const monthlyFee = document.getElementById('kmeans-monthly-fee').value;
-            const customerAge = document.getElementById('kmeans-customer-age').value;
-            const supportCalls = document.getElementById('kmeans-support-calls').value;
+            const age = document.getElementById('kmeans-age').value;
+            const income = document.getElementById('kmeans-income').value;
+            const spendingScore = document.getElementById('kmeans-spending-score').value;
 
-            if (!monthlyFee || !customerAge || !supportCalls) {
+            if (!age || !income || !spendingScore) {
                 showResult('kmeans', 'Please fill in all fields', true);
                 return;
             }
 
             const data = {
-                monthly_fee: parseFloat(monthlyFee),
-                customer_age: parseFloat(customerAge),
-                support_calls: parseFloat(supportCalls)
+                Age: parseInt(age),
+                Annual_Income: parseFloat(income),
+                Spending_Score: parseFloat(spendingScore)
             };
 
-            await makeAPICall('kmeans', '/api/v1/models/kmeans-cluster/predictions', data);
+            await makeAPICall('kmeans', '/api/v1/models/k-means-clustering/predictions', data);
         }
 
         // Regressor
@@ -607,7 +617,7 @@
             const items = itemsText.split(',').map(item => item.trim());
             const data = { items };
 
-            await makeAPICall('recommender', '/api/v1/recommendations', data);
+            await makeAPICall('recommender', '/api/v1/models/apriori-recommender/predictions', data);
         }
 
         // API Call Handler
@@ -635,6 +645,9 @@
                     } else if (result['Predicted Class = '] !== undefined) {
                         resultText = `Predicted Class: <strong>${result['Predicted Class = ']}</strong>`;
                         showResult(tabName, resultText, false);
+                    } else if (result.Cluster_ID !== undefined) {
+                        resultText = `Cluster ID: <strong>${result.Cluster_ID}</strong><br><em>${result.Description}</em>`;
+                        showResult(tabName, resultText, false);
                     } else if (result.cluster !== undefined) {
                         resultText = `Cluster ID: <strong>${result.cluster}</strong>`;
                         showResult(tabName, resultText, false);
@@ -642,7 +655,7 @@
                         resultText = `Predicted Profit %: <strong>${result['Predicted Percentage Profit per Unit = '].toFixed(2)}%</strong>`;
                         showResult(tabName, resultText, false);
                     } else if (result.recommendations) {
-                        resultText = `Recommended Products: <strong>${result.recommendations.join(', ')}</strong>`;
+                        resultText = `Recommended Products: <br><ul>${result.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>`;
                         showResult(tabName, resultText, false);
                     } else {
                         resultText = `Result: <strong>${JSON.stringify(result)}</strong>`;
@@ -672,10 +685,11 @@
         }
 
         // Set default date to today
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('payment-date').value = today;
         });
     </script>
 </body>
+
 </html>
