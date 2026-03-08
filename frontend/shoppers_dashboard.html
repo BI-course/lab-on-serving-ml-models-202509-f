@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Shopper Insights Dashboard - Model Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            height: 100vh;
+            padding: 30px;
+            border-right: 1px solid #ddd;
+            position: fixed;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            margin-left: 350px;
+            padding: 40px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        h2,
+        h3 {
+            color: #1a73e8;
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5f6368;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            grid-column: span 2;
+            padding: 15px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #174ea6;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .result-box {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e8eaed;
+        }
+
+        .result-box h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .pred-val {
+            font-size: 28px;
+            font-weight: 800;
+            color: #202124;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .buy {
+            background: #e6f4ea;
+            color: #137333;
+        }
+
+        .no-buy {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+
+        canvas {
+            max-height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Shopper Intent</h2>
+        <p style="font-size: 14px; color: #5f6368; margin-bottom: 25px;">Provide session details to see if the customer
+            is likely to make a purchase.</p>
+
+        <form id="shopperForm" class="form-grid">
+            <div><label>Admin Pages</label><input type="number" id="Administrative" value="0"></div>
+            <div><label>Admin Duration</label><input type="number" id="Administrative_Duration" value="0"></div>
+            <div><label>Info Pages</label><input type="number" id="Informational" value="0"></div>
+            <div><label>Info Duration</label><input type="number" id="Informational_Duration" value="0"></div>
+            <div><label>Product Pages</label><input type="number" id="ProductRelated" value="10"></div>
+            <div><label>Product Duration</label><input type="number" id="ProductRelated_Duration" value="100"></div>
+            <div><label>Bounce Rate</label><input type="number" step="0.01" id="BounceRates" value="0"></div>
+            <div><label>Exit Rate</label><input type="number" step="0.01" id="ExitRates" value="0.02"></div>
+            <div><label>Page Value</label><input type="number" step="0.1" id="PageValues" value="0"></div>
+            <div><label>Special Day</label><input type="number" step="0.1" id="SpecialDay" value="0"></div>
+            <div><label>Month</label><select id="Month">
+                    <option>Feb</option>
+                    <option>Mar</option>
+                    <option>May</option>
+                    <option>Oct</option>
+                    <option>Nov</option>
+                </select></div>
+            <div><label>Visitor Type</label><select id="VisitorType">
+                    <option>Returning_Visitor</option>
+                    <option>New_Visitor</option>
+                </select></div>
+            <div><label>Weekend</label><select id="Weekend">
+                    <option>FALSE</option>
+                    <option>TRUE</option>
+                </select></div>
+            <div><label>Region</label><input type="number" id="Region" value="1"></div>
+            <div><label>Traffic Type</label><input type="number" id="TrafficType" value="1"></div>
+            <div><label>Browser</label><input type="number" id="Browser" value="1"></div>
+            <div><label>OS</label><input type="number" id="OperatingSystems" value="1"></div>
+            <button type="submit">Analyze Intent</button>
+        </form>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h3>Model Agreement Analysis</h3>
+            <div class="results-grid">
+                <div class="result-box" id="box-nb">
+                    <h4>Naive Bayes</h4>
+                    <div class="pred-val">-</div>
+                </div>
+                <div class="result-box" id="box-knn">
+                    <h4>kNN</h4>
+                    <div class="pred-val">-</div>
+                </div>
+                <div class="result-box" id="box-svm">
+                    <h4>SVM</h4>
+                    <div class="pred-val">-</div>
+                </div>
+                <div class="result-box" id="box-rf">
+                    <h4>Random Forest</h4>
+                    <div class="pred-val">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Propensity Visualization</h3>
+            <canvas id="comparisonChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        const endpoints = [
+            { id: 'nb', name: 'Naive Bayes', url: 'naive-bayes-classifier' },
+            { id: 'knn', name: 'kNN', url: 'knn-classifier' },
+            { id: 'svm', name: 'SVM', url: 'svm-classifier' },
+            { id: 'rf', name: 'Random Forest', url: 'random-forest-classifier' }
+        ];
+
+        document.getElementById('shopperForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {};
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                let val = input.value;
+                if (input.type === 'number') val = parseFloat(val);
+                formData[input.id] = val;
+            });
+
+            const predictions = [];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const res = await fetch(`http://127.0.0.1:5000/api/v1/models/${endpoint.url}/predictions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    const data = await res.json();
+                    const pred = data['Predicted Class = '];
+                    predictions.push(pred);
+
+                    const box = document.getElementById(`box-${endpoint.id}`);
+                    const valDiv = box.querySelector('.pred-val');
+                    valDiv.innerText = pred === 1 ? 'BUY' : 'NO';
+                    valDiv.className = 'pred-val ' + (pred === 1 ? 'buy' : 'no-buy');
+                } catch (err) {
+                    console.error(err);
+                    predictions.push(0);
+                }
+            }
+
+            updateChart(predictions);
+        });
+
+        function updateChart(data) {
+            if (chart) chart.destroy();
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: endpoints.map(e => e.name),
+                    datasets: [{
+                        label: 'Purchase Intent (1 = Buy, 0 = No Buy)',
+                        data: data,
+                        backgroundColor: data.map(v => v === 1 ? '#34a853' : '#ea4335'),
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true, max: 1, ticks: { stepSize: 1 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

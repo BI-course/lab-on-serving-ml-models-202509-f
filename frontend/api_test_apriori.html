@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Apriori Recommender - Market Basket Analysis</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 40px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        #addBtn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .cart-list {
+            margin-bottom: 25px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            background: #fff;
+            min-height: 50px;
+        }
+
+        .cart-item {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .cart-item .remove {
+            margin-left: 8px;
+            cursor: pointer;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        #recommendBtn {
+            width: 100%;
+            padding: 15px;
+            background-color: #6c5ce7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        #recommendations {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .rec-card {
+            background: #f0edff;
+            border: 1px solid #d1c9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: #4834d4;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .rec-card::before {
+            content: "✨";
+            margin-right: 15px;
+            font-size: 20px;
+        }
+
+        .empty-msg {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Smart Recommendations (Apriori)</h2>
+        <p>Add items to your cart to see what else you might want to buy!</p>
+
+        <div class="input-group">
+            <input type="text" id="itemInput" placeholder="Enter item (e.g. whole milk, yogurt)">
+            <button id="addBtn">Add</button>
+        </div>
+
+        <div id="cart" class="cart-list">
+            <span class="empty-msg">Cart is empty...</span>
+        </div>
+
+        <button id="recommendBtn">Get Recommendations</button>
+
+        <div id="recommendations">
+            <h3>You might also like:</h3>
+            <div id="recList"></div>
+        </div>
+    </div>
+
+    <script>
+        let cart = new Set();
+
+        document.getElementById('addBtn').addEventListener('click', () => {
+            const input = document.getElementById('itemInput');
+            const value = input.value.trim().toLowerCase();
+            if (value && !cart.has(value)) {
+                cart.add(value);
+                renderCart();
+                input.value = '';
+            }
+        });
+
+        function renderCart() {
+            const cartDiv = document.getElementById('cart');
+            if (cart.size === 0) {
+                cartDiv.innerHTML = '<span class="empty-msg">Cart is empty...</span>';
+                return;
+            }
+            cartDiv.innerHTML = '';
+            cart.forEach(item => {
+                const span = document.createElement('span');
+                span.className = 'cart-item';
+                span.innerHTML = `${item} <span class="remove" onclick="removeItem('${item}')">&times;</span>`;
+                cartDiv.appendChild(span);
+            });
+        }
+
+        window.removeItem = (item) => {
+            cart.delete(item);
+            renderCart();
+        };
+
+        document.getElementById('recommendBtn').addEventListener('click', async () => {
+            if (cart.size === 0) return alert('Please add items to your cart!');
+
+            const recsDiv = document.getElementById('recommendations');
+            const recList = document.getElementById('recList');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/v1/models/apriori-recommender/predictions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: Array.from(cart) })
+                });
+
+                const result = await response.json();
+                recList.innerHTML = '';
+
+                if (result.recommendations && result.recommendations.length > 0) {
+                    result.recommendations.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'rec-card';
+                        div.innerText = item;
+                        recList.appendChild(div);
+                    });
+                } else {
+                    recList.innerHTML = '<p class="empty-msg">No recommendations found for this combination.</p>';
+                }
+                recsDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                alert('Error fetching recommendations');
+            }
+        });
+    </script>
+
+</body>
+
+</html>

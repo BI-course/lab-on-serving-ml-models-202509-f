@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>k-Means Clustering - Customer Segmentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 40px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            border-left: 5px solid #3498db;
+            background-color: #e8f4fd;
+        }
+
+        .cluster-id {
+            font-size: 24px;
+            color: #2980b9;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .error {
+            background-color: #fdeaea;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Customer Segmentation (k-Means)</h2>
+        <p>Enter the customer details to predict their shopping segment.</p>
+
+        <form id="kmeansForm">
+            <label for="age">Customer Age:</label>
+            <input type="number" id="age" name="Age" placeholder="e.g. 25" required min="1" max="100">
+
+            <label for="income">Annual Income (k$):</label>
+            <input type="number" id="income" name="Annual_Income" placeholder="e.g. 50" required min="1">
+
+            <label for="spending">Spending Score (1-100):</label>
+            <input type="number" id="spending" name="Spending_Score" placeholder="e.g. 80" required min="1" max="100">
+
+            <button type="submit">Identify Segment</button>
+        </form>
+
+        <div id="result">
+            <strong id="resTitle" style="display:block; margin-bottom:5px;">Prediction Result:</strong>
+            <span id="clusterId" class="cluster-id"></span>
+            <div id="clusterDesc" class="description"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('kmeansForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const resultDiv = document.getElementById('result');
+            const clusterIdSpan = document.getElementById('clusterId');
+            const clusterDescDiv = document.getElementById('clusterDesc');
+
+            const data = {
+                Age: parseInt(document.getElementById('age').value),
+                Annual_Income: parseInt(document.getElementById('income').value),
+                Spending_Score: parseInt(document.getElementById('spending').value)
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/v1/models/k-means-clustering/predictions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = '';
+                    clusterIdSpan.innerText = 'Cluster #' + result.Cluster_ID;
+                    clusterDescDiv.innerText = result.Description;
+                } else {
+                    throw new Error(result.error || 'Server error');
+                }
+
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.classList.add('error');
+                clusterIdSpan.innerText = 'Error';
+                clusterDescDiv.innerText = error.message;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
