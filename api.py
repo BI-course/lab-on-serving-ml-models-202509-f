@@ -15,6 +15,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
+import ast
 
 app = Flask(__name__)
 # CORS(
@@ -48,82 +49,67 @@ CORS(
 
 # Load different models
 # joblib is used to load a trained model so that the API can serve ML predictions
-# baseline models
 decisiontree_classifier_baseline = joblib.load('./model/decisiontree_classifier_baseline.pkl')
 decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_optimum.pkl')
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
-# intermediate/additional classifiers
-naive_bayes_classifier_optimum = joblib.load('./model/naive_Bayes_classifier_optimum.pkl')
+# Group 2, 4, 5 models/encoders
+label_encoders_2 = joblib.load('./model/label_encoders_2.pkl')
+label_encoders_4 = joblib.load('./model/label_encoders_4.pkl')
+scaler_4 = joblib.load('./model/scaler_4.pkl')
+label_encoders_5 = joblib.load('./model/label_encoders_5.pkl')
+scaler_5 = joblib.load('./model/scaler_5.pkl')
+
 knn_classifier_optimum = joblib.load('./model/knn_classifier_optimum.pkl')
+naive_Bayes_classifier_optimum = joblib.load('./model/naive_Bayes_classifier_optimum.pkl')
 random_forest_classifier_optimum = joblib.load('./model/random_forest_classifier_optimum.pkl')
 support_vector_classifier_optimum = joblib.load('./model/support_vector_classifier_optimum.pkl')
 
-# scalers for kNN and SVM (distance-based models sensitive to feature scaling)
-try:
-    scaler_knn = joblib.load('./model/scaler_4.pkl')
-except FileNotFoundError:
-    scaler_knn = None
-try:
-    scaler_svm = joblib.load('./model/scaler_5.pkl')
-except FileNotFoundError:
-    scaler_svm = None
-
-# advanced models/data for optional endpoints
-# k-Means cluster model (trained elsewhere and saved to disk)
+# Group 6 and 7 models
 kmeans_model = joblib.load('./model/kmeans_model.pkl')
-# association rules dictionary: antecedent tuple -> list of consequent tuples
-assoc_rules = joblib.load('./model/assoc_rules.pkl')
+apriori_rules = pd.read_csv('./model/top_rules_7b.csv')
 
-
-# Helper utilities -----------------------------------------------------------
-def _validate_numeric_inputs(data, fields):
-    """Ensure that each expected field is present and can be interpreted as a number.
-    Returns (valid: bool, message: str|None).
-    """
-    missing = [f for f in fields if data.get(f) is None]
-    if missing:
-        return False, f"Missing field(s): {', '.join(missing)}"
-    return True, None
-
-
-def _validate_items_list(data):
-    """Check that request JSON contains a list under key 'items'."""
-    items = data.get('items')
-    if not isinstance(items, list):
-        return False, "Missing or invalid 'items'; expected a list of product identifiers"
-    return True, None
-
-
-def _predict_from_model(model, data, scaler=None):
-    """Run prediction against a simple numeric-feature model.
-    Assumes all features are numeric and provided in 'data'.
-    If a scaler is provided, applies it before prediction."""
-    expected_features = ['monthly_fee', 'customer_age', 'support_calls']
-    valid, msg = _validate_numeric_inputs(data, expected_features)
-    if not valid:
-        return None, msg
-
-    # build dataframe keeping column order consistent with training
-    new_data = pd.DataFrame([{f: data.get(f) for f in expected_features}])
-    new_data = new_data[expected_features]
-    
-    # apply scaler if provided (for distance-based models like kNN and SVM)
-    if scaler is not None:
-        new_data = pd.DataFrame(scaler.transform(new_data), columns=expected_features)
-    
-    pred = model.predict(new_data)[0]
-    return int(pred), None
-
-
-# Defines an HTTP endpoint for the baseline decision‑tree classifier
+# Defines an HTTP endpoint
 @app.route('/api/v1/models/decision-tree-classifier/predictions', methods=['POST'])
 def predict_decision_tree_classifier():
+    # Accepts JSON data sent by a client (browser, curl, Postman, etc.)
     data = request.get_json()
-    prediction, error = _predict_from_model(decisiontree_classifier_baseline, data)
-    if error:
-        return jsonify({'error': error}), 400
-    return jsonify({'Predicted Class = ': prediction})
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+
+    # Define the expected feature order (based on the order used during training)
+    expected_features = [
+        'monthly_fee',
+        'customer_age',
+        'support_calls'
+    ]
+
+    for feat in expected_features:
+        if feat not in data:
+            return jsonify({'error': f'Missing required feature: {feat}'}), 400
+
+    # Create a DataFrame with the correct feature names
+    new_data = pd.DataFrame([{
+        'monthly_fee': data.get('monthly_fee'),
+        'customer_age': data.get('customer_age'),
+        'support_calls': data.get('support_calls')
+    }])
+
+    # Define the expected feature order (based on the order used during training)
+    expected_features = [
+        'monthly_fee',
+        'customer_age',
+        'support_calls'
+    ]
+
+    # Reorder and select only the expected columns
+    new_data = new_data[expected_features]
+
+    # Performs a prediction using the already trained machine learning model
+    prediction = decisiontree_classifier_baseline.predict(new_data)[0]
+    
+    # Returns the result as a JSON response:
+    return jsonify({'Predicted Class = ': int(prediction)})
 
 # *1* Sample JSON POST values
 # {
@@ -131,78 +117,6 @@ def predict_decision_tree_classifier():
 #     "customer_age": 30,
 #     "support_calls": 1
 # }
-
-# additional classifier endpoints for intermediate level
-@app.route('/api/v1/models/naive-bayes-classifier/predictions', methods=['POST'])
-def predict_naive_bayes():
-    data = request.get_json()
-    prediction, error = _predict_from_model(naive_bayes_classifier_optimum, data)
-    if error:
-        return jsonify({'error': error}), 400
-    return jsonify({'Predicted Class = ': prediction})
-
-
-@app.route('/api/v1/models/knn-classifier/predictions', methods=['POST'])
-def predict_knn():
-    data = request.get_json()
-    prediction, error = _predict_from_model(knn_classifier_optimum, data, scaler=scaler_knn)
-    if error:
-        return jsonify({'error': error}), 400
-    return jsonify({'Predicted Class = ': prediction})
-
-
-@app.route('/api/v1/models/random-forest-classifier/predictions', methods=['POST'])
-def predict_random_forest():
-    data = request.get_json()
-    prediction, error = _predict_from_model(random_forest_classifier_optimum, data)
-    if error:
-        return jsonify({'error': error}), 400
-    return jsonify({'Predicted Class = ': prediction})
-
-
-@app.route('/api/v1/models/svm-classifier/predictions', methods=['POST'])
-def predict_svm():
-    data = request.get_json()
-    prediction, error = _predict_from_model(support_vector_classifier_optimum, data, scaler=scaler_svm)
-    if error:
-        return jsonify({'error': error}), 400
-    return jsonify({'Predicted Class = ': prediction})
-
-# --- advanced endpoints ----------------------------------------------------
-@app.route('/api/v1/models/kmeans-cluster/predictions', methods=['POST'])
-def predict_kmeans_cluster():
-    """Return predicted cluster index for numeric data (same features as classifier)."""
-    data = request.get_json()
-    prediction, error = _predict_from_model(kmeans_model, data)
-    if error:
-        return jsonify({'error': error}), 400
-    return jsonify({'cluster': prediction})
-
-
-@app.route('/api/v1/recommendations', methods=['POST'])
-def recommend_products():
-    """Simple recommender using precomputed association rules.
-
-    Expects JSON body with key 'items' containing a list of previously
-    purchased products. Returns a list of recommended products.
-    """
-    data = request.get_json()
-    valid, msg = _validate_items_list(data)
-    if not valid:
-        return jsonify({'error': msg}), 400
-
-    items = data.get('items', [])
-    recs = set()
-    for antecedent, consequents in assoc_rules.items():
-        if set(antecedent).issubset(items):
-            for cons in consequents:
-                # cons may be tuple
-                if isinstance(cons, (list, tuple)):
-                    recs.update(cons)
-                else:
-                    recs.add(cons)
-    return jsonify({'recommendations': list(recs)})
-
 
 # *2.a.* Sample cURL POST values (without HTTPS in NGINX and Gunicorn)
 
@@ -232,15 +146,28 @@ def recommend_products():
 @app.route('/api/v1/models/decision-tree-regressor/predictions', methods=['POST'])
 def predict_decision_tree_regressor():
     data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+
     # Expected input keys:
     # 'PaymentDate', 'CustomerType', 'BranchSubCounty',
-    # 'ProductCategoryName', 'QuantityOrdered', 'PercentageProfitPerUnit'
+    # 'ProductCategoryName', 'QuantityOrdered'
+    expected_input_keys = [
+        'PaymentDate', 'CustomerType', 'BranchSubCounty',
+        'ProductCategoryName', 'QuantityOrdered'
+    ]
+    for key in expected_input_keys:
+        if key not in data:
+            return jsonify({'error': f'Missing required feature: {key}'}), 400
 
     # Create a DataFrame based on the input
     new_data = pd.DataFrame([data])
 
-    # Convert PaymentDate to datetime
-    new_data['PaymentDate'] = pd.to_datetime(new_data['PaymentDate'])
+    try:
+        # Convert PaymentDate to datetime
+        new_data['PaymentDate'] = pd.to_datetime(new_data['PaymentDate'])
+    except Exception as e:
+        return jsonify({'error': f'Invalid Date format for PaymentDate: {str(e)}'}), 400
 
     # Identify all datetime columns
     datetime_columns = new_data.select_dtypes(include=['datetime64']).columns
@@ -250,7 +177,10 @@ def predict_decision_tree_regressor():
     # Encode categorical columns
     for col in categorical_cols:
         if col in new_data:
-            new_data[col] = label_encoders_1b[col].transform(new_data[col])
+            try:
+                new_data[col] = label_encoders_1b[col].transform(new_data[col].astype(str))
+            except Exception as e:
+                return jsonify({'error': f'Invalid value for {col}: {str(e)}'}), 400
 
     # Feature engineering for date
     new_data['PaymentDate_year'] = new_data['PaymentDate'].dt.year # type: ignore
@@ -321,6 +251,183 @@ def predict_decision_tree_regressor():
 #     -Method POST `
 #     -Body $body `
 #     -ContentType "application/json"
+
+EXPECTED_SHO_FEATURES = [
+    'Administrative', 'Administrative_Duration', 'Informational',
+    'Informational_Duration', 'ProductRelated', 'ProductRelated_Duration',
+    'BounceRates', 'ExitRates', 'PageValues', 'SpecialDay', 'Month',
+    'OperatingSystems', 'Browser', 'Region', 'TrafficType', 'VisitorType',
+    'Weekend'
+]
+
+def preprocess_shoppers_data(data, label_encoders, scaler):
+    df = pd.DataFrame([data])
+    
+    # Check for missing features
+    missing = [f for f in EXPECTED_SHO_FEATURES if f not in df.columns]
+    if missing:
+        raise ValueError(f"Missing required features: {missing}")
+        
+    df = df[EXPECTED_SHO_FEATURES]
+    
+    # Encode categorical features
+    for col in ['VisitorType', 'Weekend', 'Month']:
+        if col in df.columns:
+            df[col] = label_encoders[col].transform(df[col].astype(str))
+            
+    # Scale numerical features
+    scaled_data = scaler.transform(df)
+    return pd.DataFrame(scaled_data, columns=EXPECTED_SHO_FEATURES)
+
+@app.route('/api/v1/models/naive-bayes-classifier/predictions', methods=['POST'])
+def predict_naive_bayes():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+    try:
+        processed_data = preprocess_shoppers_data(data, label_encoders_4, scaler_4)
+        pred = naive_Bayes_classifier_optimum.predict(processed_data)[0]
+        return jsonify({'Predicted Class = ': int(pred)})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
+
+@app.route('/api/v1/models/knn-classifier/predictions', methods=['POST'])
+def predict_knn():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+    try:
+        processed_data = preprocess_shoppers_data(data, label_encoders_4, scaler_4)
+        pred = knn_classifier_optimum.predict(processed_data)[0]
+        return jsonify({'Predicted Class = ': int(pred)})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
+
+@app.route('/api/v1/models/svm-classifier/predictions', methods=['POST'])
+def predict_svm():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+    try:
+        processed_data = preprocess_shoppers_data(data, label_encoders_5, scaler_5)
+        pred = support_vector_classifier_optimum.predict(processed_data)[0]
+        return jsonify({'Predicted Class = ': int(pred)})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
+
+@app.route('/api/v1/models/random-forest-classifier/predictions', methods=['POST'])
+def predict_random_forest():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+    try:
+        processed_data = preprocess_shoppers_data(data, label_encoders_4, scaler_4)
+        pred = random_forest_classifier_optimum.predict(processed_data)[0]
+        return jsonify({'Predicted Class = ': int(pred)})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
+
+@app.route('/api/v1/models/k-means-clustering/predictions', methods=['POST'])
+def predict_kmeans_cluster():
+    """
+    Endpoint for k-Means clustering to predict customer segment.
+    Features: Age, Annual_Income, Spending_Score
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON payload provided'}), 400
+    
+    required_fields = ['Age', 'Annual_Income', 'Spending_Score']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing required feature: {field}'}), 400
+
+    try:
+        # Prepare data for prediction
+        # Features used during training: 'Age', 'Annual Income (k$)', 'Spending Score (1-100)'
+        input_df = pd.DataFrame([{
+            'Age': data['Age'],
+            'Annual Income (k$)': data['Annual_Income'],
+            'Spending Score (1-100)': data['Spending_Score']
+        }])
+        
+        cluster_id = int(kmeans_model.predict(input_df)[0])
+        
+        # Descriptions based on clustering analysis
+        descriptions = {
+            0: "Targeted Premium: Young customers with high income and high spending behavior.",
+            1: "Average Spenders: Young customers with low-medium income and average spending behavior.",
+            2: "Low Spenders: Mature customers with high income but low spending behavior.",
+            3: "Frugal: Mature female customers with low income and frugal spending behavior.",
+            4: "Luxury Shoppers: Middle-aged customers with medium income and luxury spending behavior."
+        }
+        
+        return jsonify({
+            'Cluster_ID': cluster_id,
+            'Description': descriptions.get(cluster_id, "Unknown Segment")
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/api/v1/models/apriori-recommender/predictions', methods=['POST'])
+def recommend_apriori():
+    """
+    Endpoint for Apriori recommender to suggest items.
+    Input: {"items": ["item1", "item2"]}
+    """
+    data = request.get_json()
+    if not data or 'items' not in data:
+        return jsonify({'error': 'No JSON payload or "items" list provided'}), 400
+    
+    input_items = set(data['items'])
+    recommendations = []
+
+    try:
+        for _, row in apriori_rules.iterrows():
+            # Rules stored in CSV often look like "frozenset({'item'})"
+            # We need to parse them to sets for comparison
+            def parse_set(s):
+                if isinstance(s, str) and 'frozenset' in s:
+                    # Strip 'frozenset({' and '})'
+                    inner = s.replace("frozenset({", "").replace("})", "")
+                    # Evaluate as a tuple or similar if possible, or just split by comma
+                    try:
+                        return set(ast.literal_eval(f"{{{inner}}}"))
+                    except:
+                        return set([i.strip().strip("'").strip('"') for i in inner.split(',')])
+                return set()
+
+            antecedents = parse_set(row['antecedents'])
+            consequents = parse_set(row['consequents'])
+
+            if antecedents.issubset(input_items):
+                recommendations.append({
+                    'items': list(consequents),
+                    'confidence': float(row['confidence']),
+                    'lift': float(row['lift'])
+                })
+
+        # Sort by confidence and lift
+        recommendations = sorted(recommendations, key=lambda x: (x['confidence'], x['lift']), reverse=True)
+        
+        # Take top unique items from consequents
+        top_items = []
+        for rec in recommendations:
+            for item in rec['items']:
+                if item not in top_items and item not in input_items:
+                    top_items.append(item)
+            if len(top_items) >= 3:
+                break
+
+        return jsonify({
+            'recommendations': top_items[:5]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 # This ensures the Flask web server only starts when you run this file directly
 # (e.g., `python api.py`), and not if you import api.py from another script or test.
