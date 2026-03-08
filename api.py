@@ -15,6 +15,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
+import ast
 
 app = Flask(__name__)
 # CORS(
@@ -63,6 +64,10 @@ knn_classifier_optimum = joblib.load('./model/knn_classifier_optimum.pkl')
 naive_Bayes_classifier_optimum = joblib.load('./model/naive_Bayes_classifier_optimum.pkl')
 random_forest_classifier_optimum = joblib.load('./model/random_forest_classifier_optimum.pkl')
 support_vector_classifier_optimum = joblib.load('./model/support_vector_classifier_optimum.pkl')
+
+# Group 6 and 7 models
+kmeans_model = joblib.load('./model/kmeans_model.pkl')
+apriori_rules = pd.read_csv('./model/top_rules_7b.csv')
 
 # Defines an HTTP endpoint
 @app.route('/api/v1/models/decision-tree-classifier/predictions', methods=['POST'])
@@ -329,32 +334,100 @@ def predict_random_forest():
 @app.route('/api/v1/models/k-means-clustering/predictions', methods=['POST'])
 def predict_kmeans_cluster():
     """
-    Stub endpoint for k-Means clustering.
-    The k-Means model (.pkl) is currently missing from the model/ directory.
+    Endpoint for k-Means clustering to predict customer segment.
+    Features: Age, Annual_Income, Spending_Score
     """
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No JSON payload provided'}), 400
     
-    # TODO: Load the k-Means model and implement prediction logic
-    return jsonify({
-        'error': 'k-Means model not found. Please upload the .pkl file to the model/ directory and implement logic here.'
-    }), 501
+    required_fields = ['Age', 'Annual_Income', 'Spending_Score']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing required feature: {field}'}), 400
+
+    try:
+        # Prepare data for prediction
+        # Features used during training: 'Age', 'Annual Income (k$)', 'Spending Score (1-100)'
+        input_df = pd.DataFrame([{
+            'Age': data['Age'],
+            'Annual Income (k$)': data['Annual_Income'],
+            'Spending Score (1-100)': data['Spending_Score']
+        }])
+        
+        cluster_id = int(kmeans_model.predict(input_df)[0])
+        
+        # Descriptions based on clustering analysis
+        descriptions = {
+            0: "Targeted Premium: Young customers with high income and high spending behavior.",
+            1: "Average Spenders: Young customers with low-medium income and average spending behavior.",
+            2: "Low Spenders: Mature customers with high income but low spending behavior.",
+            3: "Frugal: Mature female customers with low income and frugal spending behavior.",
+            4: "Luxury Shoppers: Middle-aged customers with medium income and luxury spending behavior."
+        }
+        
+        return jsonify({
+            'Cluster_ID': cluster_id,
+            'Description': descriptions.get(cluster_id, "Unknown Segment")
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 @app.route('/api/v1/models/apriori-recommender/predictions', methods=['POST'])
 def recommend_apriori():
     """
-    Stub endpoint for Apriori recommender.
-    The Apriori rules model/file is currently missing from the model/ directory.
+    Endpoint for Apriori recommender to suggest items.
+    Input: {"items": ["item1", "item2"]}
     """
     data = request.get_json()
-    if not data:
-        return jsonify({'error': 'No JSON payload provided'}), 400
+    if not data or 'items' not in data:
+        return jsonify({'error': 'No JSON payload or "items" list provided'}), 400
     
-    # TODO: Load the Apriori rules and implement recommendation logic
-    return jsonify({
-        'error': 'Apriori rules not found. Please upload the rules file to the model/ directory and implement logic here.'
-    }), 501
+    input_items = set(data['items'])
+    recommendations = []
+
+    try:
+        for _, row in apriori_rules.iterrows():
+            # Rules stored in CSV often look like "frozenset({'item'})"
+            # We need to parse them to sets for comparison
+            def parse_set(s):
+                if isinstance(s, str) and 'frozenset' in s:
+                    # Strip 'frozenset({' and '})'
+                    inner = s.replace("frozenset({", "").replace("})", "")
+                    # Evaluate as a tuple or similar if possible, or just split by comma
+                    try:
+                        return set(ast.literal_eval(f"{{{inner}}}"))
+                    except:
+                        return set([i.strip().strip("'").strip('"') for i in inner.split(',')])
+                return set()
+
+            antecedents = parse_set(row['antecedents'])
+            consequents = parse_set(row['consequents'])
+
+            if antecedents.issubset(input_items):
+                recommendations.append({
+                    'items': list(consequents),
+                    'confidence': float(row['confidence']),
+                    'lift': float(row['lift'])
+                })
+
+        # Sort by confidence and lift
+        recommendations = sorted(recommendations, key=lambda x: (x['confidence'], x['lift']), reverse=True)
+        
+        # Take top unique items from consequents
+        top_items = []
+        for rec in recommendations:
+            for item in rec['items']:
+                if item not in top_items and item not in input_items:
+                    top_items.append(item)
+            if len(top_items) >= 3:
+                break
+
+        return jsonify({
+            'recommendations': top_items[:5]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 # This ensures the Flask web server only starts when you run this file directly
 # (e.g., `python api.py`), and not if you import api.py from another script or test.
