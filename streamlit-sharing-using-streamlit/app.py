@@ -156,9 +156,9 @@ with tab2:
         # Output Result
         st.divider()
 
-        st.write(col)
-        st.write(new_data[col])
-        st.write(label_encoders_1b[col].classes_)
+        # st.write(col)
+        # st.write(new_data[col])
+        # st.write(label_encoders_1b[col].classes_)
 
         st.success(f"Prediction Profit: {prediction_regressor}")
         #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
