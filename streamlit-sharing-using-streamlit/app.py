@@ -81,7 +81,7 @@ with tab2:
         
         #branch_sub_county = st.text_input("Branch Sub-County", "e.g., Kilimani")
         branch_sub_county = st.selectbox(
-            "Select Product Cateogry",
+            "Select Sub County",
             options=["Makadara","Kamukunji","Roy Sambu","Kibra","Langata","Kasarani","Mathare","Dagoretti","Starehe","Githurai","Nyeri Central","Kisumu Central","Nakuru Town East","Kesses","Embakasi","Westlands","Kilimani","Nyali","Kangemi","Ruaraka"],
             index=None,
             placeholder="Choose an option...",
