@@ -46,8 +46,8 @@
                 QuantityOrdered: parseInt(document.getElementById('QuantityOrdered').value)
             };
             
-            fetch('http://127.0.0.1:5000/api/v1/models/decision-tree-regressor/predictions', {
-            // fetch('https://127.0.0.1:443/api/v1/models/decision-tree-regressor/predictions', {
+            //fetch('http://127.0.0.1:5000/api/v1/models/decision-tree-regressor/predictions', {
+             fetch('https://127.0.0.1:443/api/v1/models/decision-tree-regressor/predictions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
