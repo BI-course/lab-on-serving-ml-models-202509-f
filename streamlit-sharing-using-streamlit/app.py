@@ -1,259 +1,246 @@
 import streamlit as st
-from datetime import date
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-
-
-# Load trained model
-model = joblib.load("./model/decisiontree_classifier_baseline.pkl")
-
-# we have added this as part of class assignment
-nbcmodel = joblib.load("./model/naive_Bayes_classifier_optimum.pkl")
-knnmodel = joblib.load("./model/knn_classifier_optimum.pkl")
-rfcmodel = joblib.load("./model/random_forest_classifier_optimum.pkl")
-svmmodel = joblib.load("./model/support_vector_classifier_optimum.pkl")
-decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_optimum.pkl')
-label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
-
-#confirm with Robbi about this
-scaler_five = joblib.load('./model/scaler_3.pkl')
-onehot_encoder_path = joblib.load('./model/onehot_encoder_3.pkl')
-
-
-# Streamlit page config
-
+from datetime import date
+import ast
 
 # -----------------------------
-# Page config
+# Page configuration
 # -----------------------------
 st.set_page_config(
-    page_title="Group Work CAT",
-    page_icon="📊",
-    layout="wide"
+    page_title="Advanced ML Serving Dashboard",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("Dashboard")
+# Custom CSS for premium look
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stButton>button { width: 100%; border-radius: 8px; height: 3em; background-color: #4A90E2; color: white; }
+    .stMetric { background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    </style>
+    """, unsafe_allow_html=True)
 
 # -----------------------------
-# Tabs for different models
+# Model Loading (Cached)
 # -----------------------------
-tab1, tab2, tab3, tab4 = st.tabs([
-    "Customer Churn",
-    "Predict Profit",
-    "Predict Lateness ( KNN )",
-    "Placeholder"
-])
+@st.cache_resource
+def load_models():
+    models = {
+        "dt_classifier": joblib.load("./model/decisiontree_classifier_baseline.pkl"),
+        "dt_regressor": joblib.load("./model/decisiontree_regressor_optimum.pkl"),
+        "label_encoders_1b": joblib.load("./model/label_encoders_1b.pkl"),
+        "knn_optimum": joblib.load("./model/knn_classifier_optimum.pkl"),
+        "nb_optimum": joblib.load("./model/naive_Bayes_classifier_optimum.pkl"),
+        "rf_optimum": joblib.load("./model/random_forest_classifier_optimum.pkl"),
+        "svm_optimum": joblib.load("./model/support_vector_classifier_optimum.pkl"),
+        "scaler_4": joblib.load("./model/scaler_4.pkl"),
+        "scaler_5": joblib.load("./model/scaler_5.pkl"),
+        "label_encoders_4": joblib.load("./model/label_encoders_4.pkl"),
+        "label_encoders_5": joblib.load("./model/label_encoders_5.pkl"),
+        "kmeans": joblib.load("./model/kmeans_model.pkl"),
+        "apriori": pd.read_csv("./model/top_rules_7b.csv")
+    }
+    return models
 
-# -----------------------------
-# CHURN MODEL FORM
-# -----------------------------
-with tab1:
-
-    st.header("Customer Churn Prediction")
-
-    with st.form("churn_form"):
-
-        monthly_fee = st.number_input("Monthly Fee", min_value=0.0)
-        age = st.number_input("Customer Age", min_value=0)
-        support_calls = st.number_input("Support Calls", min_value=0)
-
-        submit_churn = st.form_submit_button("Predict Churn")
-
-    if submit_churn:
-
-        X = np.array([[monthly_fee, age, support_calls]])
-        prediction = model.predict(X)
-
-        st.success(f"Churn Prediction: {prediction[0]}")
-
+try:
+    models = load_models()
+except Exception as e:
+    st.error(f"Error loading models: {e}. Please ensure all .pkl files are in the /model directory.")
+    st.stop()
 
 # -----------------------------
-# Predict Profit
+# Sidebar Navigation
 # -----------------------------
-with tab2:
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "Shopper Intent (Classifiers)", "Customer Segmentation (Clustering)", "Product Recommender (Apriori)", "Business Metrics (Regression)"])
 
-    st.header("Predict Profit")
+# -----------------------------
+# Home Page
+# -----------------------------
+if page == "Home":
+    st.title("🚀 ML Serving Dashboard")
+    st.markdown("""
+    Welcome to the **Unified Machine Learning Serving Dashboard**. 
+    This application demonstrates the practical application of various ML models including:
+    - **Classification**: Churn prediction and Shopper Intent analysis.
+    - **Regression**: Business profit prediction.
+    - **Clustering**: Customer segmentation for target marketing.
+    - **Association Rules**: Product recommendations.
+    
+    *Developed by Group Member 1 & 3.*
+    """)
+    st.image("https://images.unsplash.com/photo-1551288049-bbbda536338a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")
 
-    with st.form("predict_profit"):
+# -----------------------------
+# Shopper Intent Page
+# -----------------------------
+elif page == "Shopper Intent (Classifiers)":
+    st.title("🛍️ Shopper Intent Classifiers")
+    st.write("Compare different classification models on online shopper data.")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.subheader("Session Details")
+        admin = st.number_input("Administrative Pages", 0, 30, 0)
+        info = st.number_input("Informational Pages", 0, 30, 0)
+        prod = st.number_input("Product Related Pages", 0, 500, 20)
+        page_val = st.number_input("Page Values", 0.0, 500.0, 0.0)
+        bounce = st.number_input("Bounce Rates", 0.0, 1.0, 0.0)
+        exit_r = st.number_input("Exit Rates", 0.0, 1.0, 0.02)
+        month = st.selectbox("Month", ["Feb", "Mar", "May", "Oct", "Nov"])
+        visitor = st.selectbox("Visitor Type", ["Returning_Visitor", "New_Visitor"])
+        weekend = st.selectbox("Weekend", ["FALSE", "TRUE"])
         
-        customer_type_selection = st.selectbox(
-            "Select Customer Type",
-            options=["Business", "Individual"],
-            index=None,
-            placeholder="Choose an option...",
-            )
-        
-        branch_sub_county = st.text_input("Branch Sub-County", "e.g., Kilimani")
-        product_category_name = st.text_input("Product Category Name", "e.g., Meat-Based Dishes")
-        quantity_ordered = st.number_input("Quantity Ordered")
-        payment_date = st.date_input("Payment Date", date(2030, 7, 6))
+        predict_btn = st.button("Run Comparison")
 
-        # 2. Extract Year, Month, and Day
-        year_of_payment = payment_date.year
-        month_of_payment = payment_date.month
-        day_of_payment = payment_date.day
-
-        # 3. Get the Day of the Week
-        # .strftime("%A") returns the full name (e.g., "Thursday")
-        day_name = payment_date.strftime("%A")
-
-        # .weekday() returns an integer (0 for Monday, 6 for Sunday)
-        day_index = payment_date.weekday()
-
-
-        #transactions_today = st.number_input("Transactions Today")
-
-        submit_profit_prediction = st.form_submit_button("Predict Profit")
-
-    if submit_profit_prediction:
-        # Build the initial dictionary (mimicking your JSON request)
-        data = {
-            'PaymentDate': payment_date,
-            'CustomerType': customer_type_selection,
-            'BranchSubCounty': branch_sub_county,
-            'ProductCategoryName': product_category_name,
-            'QuantityOrdered': quantity_ordered
+    with col2:
+        st.subheader("Model Agreement")
+        if predict_btn:
+            # Preprocessing for Shoppers
+            input_data = {
+                'Administrative': admin, 'Administrative_Duration': 0,
+                'Informational': info, 'Informational_Duration': 0,
+                'ProductRelated': prod, 'ProductRelated_Duration': 100,
+                'BounceRates': bounce, 'ExitRates': exit_r, 
+                'PageValues': page_val, 'SpecialDay': 0, 'Month': month,
+                'OperatingSystems': 1, 'Browser': 1, 'Region': 1, 
+                'TrafficType': 1, 'VisitorType': visitor, 'Weekend': weekend
             }
-        
-        
+            df = pd.DataFrame([input_data])
+            
+            # Helper for encoding/scaling
+            def process(df, encoders, scaler):
+                temp_df = df.copy()
+                for col in ['VisitorType', 'Weekend', 'Month']:
+                    temp_df[col] = encoders[col].transform(temp_df[col].astype(str))
+                return scaler.transform(temp_df)
 
-        # Convert to DataFrame
-        new_data = pd.DataFrame([data])
-
-        # Feature Engineering (Date)
-        # We can use the date attributes directly since 'payment_date' is already a date object
-        new_data['PaymentDate_year'] = payment_date.year
-        new_data['PaymentDate_month'] = payment_date.month
-        new_data['PaymentDate_day'] = payment_date.day
-        new_data['PaymentDate_dayofweek'] = payment_date.weekday()
-
-        # Encode Categorical Columns
-        # Note: Ensure 'label_encoders_1b' and your model are loaded in your script
-        categorical_cols = ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']
-        for col in categorical_cols:
-            new_data[col] = label_encoders_1b[col].transform(new_data[col])
-
-        # Reorder to match training (expected_features)
-        expected_features = [
-            'CustomerType', 'BranchSubCounty', 'ProductCategoryName', 
-            'QuantityOrdered', 'PaymentDate_year', 'PaymentDate_month', 
-            'PaymentDate_day', 'PaymentDate_dayofweek'
-        ]
-        new_data = new_data[expected_features]
-
-        # Predict
-        prediction_regressor = decisiontree_regressor_optimum.predict(new_data)[0]
-
-        # Output Result
-        st.divider()
-
-        st.write(col)
-        st.write(new_data[col])
-        st.write(label_encoders_1b[col].classes_)
-
-        st.success(f"Prediction Profit: {prediction_regressor}")
-        #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
-
-
-
-# -----------------------------
-# KNN
-# -----------------------------
-with tab3:
-
-    st.header("Predict Lateness")
-
-    with st.form("predict_lateness"):
-
-        days_shipping_real = st.number_input("Days for shipping (real)")
-        days_shipping_scheduled = st.number_input("Days for shipment (scheduled)")
-        
-        # 1. Define your mapping
-        delivery_mapping = {
-             "Yes": 1,
-             "No": 0
-             }
-        # 2. Display the labels in the dropdown
-        delivery_selection = st.selectbox(
-            "Risk of Late Delivery",
-            options=list(delivery_mapping.keys()), # This shows ["Late", "On Time"]
-            index=None,
-            placeholder="Choose an option..."
-            )
-        order_item_quantity = st.number_input("Order Item Quantity")
-
-        sales = st.number_input("Sales")
-        order_profit_per_order = st.number_input("Order Profit Per Order")
-        
-        shipping_mode = st.selectbox(
-            "Shipping Mode",
-            options=["Standard Class", "First Class"],
-            index=None,
-            placeholder="Choose an option...",
-            )
-        submit_lateness_prediction = st.form_submit_button("Predict Lateness")
-
-    if submit_lateness_prediction:
-        # # Build the initial dictionary (mimicking your JSON request)
-        data = {
-            'Days for shipping (real)': int(days_shipping_real),
-            'Days for shipment (scheduled)': int(days_shipping_scheduled),
-            'Late_delivery_risk':delivery_selection,
-            'Order Item Quantity': int(order_item_quantity),
-            'Sales': int(sales),
-            'Order Profit Per Order': float(order_profit_per_order),
-            'Shipping Mode': shipping_mode
+            processed_4 = process(df, models["label_encoders_4"], models["scaler_4"])
+            processed_5 = process(df, models["label_encoders_5"], models["scaler_5"])
+            
+            # Predictions
+            preds = {
+                "Naive Bayes": models["nb_optimum"].predict(processed_4)[0],
+                "kNN": models["knn_optimum"].predict(processed_4)[0],
+                "SVM": models["svm_optimum"].predict(processed_5)[0],
+                "Random Forest": models["rf_optimum"].predict(processed_4)[0]
             }
-        
-        
-
-        # # Convert to DataFrame
-        new_data = pd.DataFrame([data])
-
-        
-
-        # One-hot encode 'Shipping Mode'
-        encoded = onehot_encoder_path.transform(new_data[['Shipping Mode']])
-        encoded_df = pd.DataFrame(encoded, columns=onehot_encoder_path.get_feature_names_out(['Shipping Mode']))
-        new_data_preprocessed = pd.concat([new_data.drop('Shipping Mode', axis=1), encoded_df], axis=1)
-
-        # Scale the features
-        new_data_scaled = scaler_five.transform(new_data_preprocessed)
-
-        # Make predictions
-        predictionknn = knnmodel.predict(new_data_scaled)[0]
-
-        
-
-        st.write(col)
-        st.write(new_data[col])
-        st.write(label_encoders_1b[col].classes_)
-
-        st.success(f"Prediction: {predictionknn}")
-        # #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
-
-
-
+            
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Naive Bayes", "BUY" if preds["Naive Bayes"] else "NO")
+            m2.metric("kNN", "BUY" if preds["kNN"] else "NO")
+            m3.metric("SVM", "BUY" if preds["SVM"] else "NO")
+            m4.metric("Random Forest", "BUY" if preds["Random Forest"] else "NO")
+            
+            # Chart
+            chart_data = pd.DataFrame({
+                "Model": list(preds.keys()),
+                "Prediction": list(preds.values())
+            })
+            st.bar_chart(chart_data.set_index("Model"))
 
 # -----------------------------
-# SALES MODEL FORM
+# Clustering Page
 # -----------------------------
-with tab4:
+elif page == "Customer Segmentation (Clustering)":
+    st.title("🎯 Customer Segmentation")
+    st.write("Using k-Means to identify customer clusters based on behavior.")
+    
+    age = st.slider("Age", 18, 100, 30)
+    income = st.slider("Annual Income (k$)", 10, 200, 50)
+    score = st.slider("Spending Score (1-100)", 1, 100, 50)
+    
+    if st.button("Identify Segment"):
+        X = pd.DataFrame([{'Age': age, 'Annual Income (k$)': income, 'Spending Score (1-100)': score}])
+        cluster_id = int(models["kmeans"].predict(X)[0])
+        
+        descriptions = {
+            0: "Targeted Premium: Young, high income, high spending.",
+            1: "Average Spenders: Young, average metrics.",
+            2: "Low Spenders: Mature, high income, low spending.",
+            3: "Frugal: Mature, low income, low spending.",
+            4: "Luxury Shoppers: Middle-aged, medium income, high spending."
+        }
+        
+        st.markdown(f"### Predicted Cluster: **{cluster_id}**")
+        st.info(descriptions.get(cluster_id, "Unknown Segment"))
 
-    st.header("Sales Forecast")
+# -----------------------------
+# Recommender Page
+# -----------------------------
+elif page == "Product Recommender (Apriori)":
+    st.title("🛒 Smart Recommender")
+    st.write("Association rule-based product suggestions.")
+    
+    # Simple multi-select for mockup
+    all_items = ["whole milk", "yogurt", "rolls/buns", "soda", "bottled water", "tropical fruit"]
+    basket = st.multiselect("Select items in basket", all_items)
+    
+    if st.button("Get Recommendations"):
+        if not basket:
+            st.warning("Basket is empty!")
+        else:
+            recs = []
+            basket_set = set(basket)
+            
+            for _, row in models["apriori"].iterrows():
+                def parse_set(s):
+                    inner = s.replace("frozenset({", "").replace("})", "")
+                    try:
+                        return set(ast.literal_eval(f"{{{inner}}}"))
+                    except:
+                        return set([i.strip().strip("'").strip('"') for i in inner.split(',')])
+                
+                ants = parse_set(row['antecedents'])
+                cons = parse_set(row['consequents'])
+                
+                if ants.issubset(basket_set):
+                    recs.extend(list(cons))
+            
+            unique_recs = [r for r in set(recs) if r not in basket_set]
+            if unique_recs:
+                st.success("We recommend:")
+                for r in unique_recs[:5]:
+                    st.write(f"- {r}")
+            else:
+                st.write("No strong recommendations found.")
 
-    with st.form("sales_form"):
+# -----------------------------
+# Regression Page
+# -----------------------------
+elif page == "Business Metrics (Regression)":
+    st.title("📈 Profit Prediction")
+    st.write("Decision Tree Regressor for business profit estimation.")
+    
+    with st.form("profit_form"):
+        c_type = st.selectbox("Customer Type", ["Business", "Individual"])
+        subcounty = st.text_input("Sub County", "Kilimani")
+        prod_cat = st.text_input("Product Category", "Meat-Based Dishes")
+        qty = st.number_input("Quantity Ordered", 1, 100, 1)
+        p_date = st.date_input("Payment Date", date.today())
+        
+        if st.form_submit_button("Predict Profit"):
+            try:
+                new_data = pd.DataFrame([{
+                    'CustomerType': c_type, 'BranchSubCounty': subcounty,
+                    'ProductCategoryName': prod_cat, 'QuantityOrdered': qty,
+                    'PaymentDate_year': p_date.year, 'PaymentDate_month': p_date.month,
+                    'PaymentDate_day': p_date.day, 'PaymentDate_dayofweek': p_date.weekday()
+                }])
+                
+                # Apply encoding
+                for col in ['CustomerType', 'BranchSubCounty', 'ProductCategoryName']:
+                    new_data[col] = models["label_encoders_1b"][col].transform(new_data[col])
+                
+                pred = models["dt_regressor"].predict(new_data)[0]
+                st.success(f"### Predicted Percentage Profit: {pred:.2f}%")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
-        marketing_spend = st.number_input("Marketing Spend")
-        store_visits = st.number_input("Store Visits")
-
-        submit_sales = st.form_submit_button("Predict Sales")
-
-    if submit_sales:
-
-        X = np.array([[marketing_spend, store_visits]])
-        prediction = sales_model.predict(X)
-
-        st.success(f"Predicted Sales: {prediction[0]}")
+st.sidebar.divider()
+st.sidebar.info("This is a Streamlit demo for the BI Course project.")
