@@ -89,7 +89,7 @@ with tab2:
             )
         
         quantity_ordered = st.number_input("Quantity Ordered")
-        payment_date = st.date_input("Payment Date", date(2030, 7, 6))
+        payment_date = st.date_input("Payment Date", date.today())
 
         # 2. Extract Year, Month, and Day
         year_of_payment = payment_date.year
