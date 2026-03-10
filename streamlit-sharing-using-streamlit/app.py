@@ -126,7 +126,7 @@ elif page == "Shopper Intent (Classifiers)":
             # Predictions
             preds = {
                 "Naive Bayes": models["nb_optimum"].predict(processed_4)[0],
-                "kNN": models["knn_optimum"].predict(processed_4)[0],
+                "kNN": models["knn_optimum"].predict(processed_4[:, :8])[0],
                 "SVM": models["svm_optimum"].predict(processed_5)[0],
                 "Random Forest": models["rf_optimum"].predict(processed_4)[0]
             }
