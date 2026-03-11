@@ -26,7 +26,7 @@
 
 | **Details**                                                                                                                           | **Comment** |
 |:--------------------------------------------------------------------------------------------------------------------------------------|:------------|
-| **Student ID**                                                                                                                        |             | 069672
+| **Student ID**                                                                                                                        |   069672          | 
 | **Name**                                                                                                                              |     Starford Rangona        |
 | **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |      the Streamlit Application and picked decision tree and SVM models to demonstrate use in        |
 
@@ -35,7 +35,7 @@
 ## Chosen Level of Difficulty
 
 **Specify the chosen level of difficulty** (baseline, intermediate, or advanced):
-intermediate
+advanced
 
 ## Video Demonstration
 
