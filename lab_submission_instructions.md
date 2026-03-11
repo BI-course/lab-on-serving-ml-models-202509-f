@@ -20,7 +20,17 @@
 |:---------------------------------------------------------------------------------------------------|:------------|
 | **Student ID:**                                                                                    |   151657         |
 | **Name:**                                                                                          | Memusi Robi |
-| **What part of the lab did you personally contribute to,** <br>**and what did you learn from it?** | Update api.py: Implement the POST endpoints for the Naive Bayes, kNN, SVM, and Random Forest classifiers.
+| **What part of the lab did you personally contribute to,** <br>**and what did you learn from it?** |API Logic and Model Serving.
+
+Update api.py: Implement the POST endpoints for the Naive Bayes, kNN, SVM, and Random Forest classifiers.
+
+Implement Advanced Logic: Add the endpoints for the k-Means cluster prediction and the Apriori-based product recommender.
+
+Error Handling: Write validation logic to handle missing or incorrect inputs in the API requests.
+
+Model Loading: Ensure all .pkl files and encoders from the model/ folder are correctly integrated.
+
+I learned how to build backend APIs that serve machine learning models, including implementing prediction endpoints, integrating trained models and encoders, adding clustering and recommendation logic, and ensuring proper input validation and error handling.
 
 Implement Advanced Logic: Add the endpoints for the k-Means cluster prediction and the Apriori-based product recommender. |
 
