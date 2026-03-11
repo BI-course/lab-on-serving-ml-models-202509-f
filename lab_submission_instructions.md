@@ -28,7 +28,7 @@
 |:--------------------------------------------------------------------------------------------------------------------------------------|:------------|
 | **Student ID**                                                                                                                        |   069672          | 
 | **Name**                                                                                                                              |     Starford Rangona        |
-| **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |      the Streamlit Application and picked decision tree and SVM models to demonstrate use in        |
+| **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |      the Streamlit Application and added Customer Churn, Predict Profit & Recommender        |
 
 
 
