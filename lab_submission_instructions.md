@@ -12,7 +12,18 @@
 |:---------------------------------------------------------------------------------------------------|:------------|
 | **Student ID:**                                                                                    |   141553         |
 | **Name:**                                                                                          | Daniella Akinyi |
-| **What part of the lab did you personally contribute to,** <br>**and what did you learn from it?** | Web Interface: Create the basic HTML, CSS, and Vanilla JavaScript pages that allow users to test the API endpoints directly from a browser..             |
+| **What part of the lab did you personally contribute to,** <br>**and what did you learn from it?** | The Frontend Developer & Coordinator
+Primary Focus: User Interface, Documentation, and Final Delivery.
+
+Web Interface: Create the basic HTML, CSS, and Vanilla JavaScript pages that allow users to test the API endpoints directly from a browser.
+
+Documentation: Complete the lab_submission_instructions.md with member details and links to the GitHub branches.
+
+Video Demo: Record and edit the 5-minute video showing the API working, the public URL, and the code structure.
+
+I learned how to build a simple frontend interface using HTML, CSS, and JavaScript to interact with APIs, document project work, coordinate team integration, and demonstrate the final system through testing and a video presentation.
+
+I learned how to build a simple frontend interface using HTML, CSS, and JavaScript to interact with APIs, document project work, coordinate team integration, and demonstrate the final system through testing and a video presentation...             |
 
 **Member 2**
 
@@ -32,7 +43,7 @@ Model Loading: Ensure all .pkl files and encoders from the model/ folder are cor
 
 I learned how to build backend APIs that serve machine learning models, including implementing prediction endpoints, integrating trained models and encoders, adding clustering and recommendation logic, and ensuring proper input validation and error handling.
 
-Implement Advanced Logic: Add the endpoints for the k-Means cluster prediction and the Apriori-based product recommender. |
+Implement Advanced Logic: Add the endpoints for the k-Means cluster prediction and the Apriori-based product recommender... |
 
 
 **Member 3:**
