@@ -198,7 +198,7 @@ def dynamic_recommender_intermediate(cart, rules_df):
 
     # If no rules match
     if matching_rules.empty:
-        return "No recommendation available."
+        return False
     
     # Sort rules by confidence (highest first)
     matching_rules = matching_rules.sort_values(by='confidence', ascending=False)
