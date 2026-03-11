@@ -33,7 +33,7 @@ Implement Advanced Logic: Add the endpoints for the k-Means cluster prediction a
 | **Name**                                                                                                                              |     Starford Rangona        |
 | **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |      the Streamlit Application and added Customer Churn, Predict Profit & Recommender. Finish the Dockerization: Create the Dockerfile to package the Flask app with Gunicorn.
 
-Reverse Proxy: Configure Nginx as a shield for the Gunicorn server. |
+Reverse Proxy: Configure Nginx as a shield for the Gunicorn server. <br/>my main focus was how one can use streamlit & easily share information with others. Docker it was interesting to learn the multi build to reduce the image sizes as well as setting up SSL especially SSL for localhost self signed certificates|
 
 
 
