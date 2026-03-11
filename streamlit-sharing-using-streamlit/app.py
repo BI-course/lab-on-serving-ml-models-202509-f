@@ -231,12 +231,15 @@ with tab3:
 
         # Simple multi-select for mockup
         all_items = ["whole milk", "yogurt", "rolls/buns", "soda", "bottled water", "tropical fruit"]
-        basket = st.multiselect("Select items in basket", all_items)
+        #basket = st.multiselect("Select items in basket", all_items)
+        basket = list(st.multiselect("Select items in basket", all_items))
 
 
         submit_recommendations = st.form_submit_button("Get Recommendations")
 
     if submit_recommendations:
+
+        st.write(basket)
 
         #we have to clean the rules first as the frozen set part affects it
         loaded_rules = recommender_rules
