@@ -253,7 +253,7 @@ with tab3:
         
         if recommendations:
             st.subheader("Recommended Items")
-            st.write(", ".join(recommendations))
+            st.success(", ".join(recommendations))
         else:
             st.warning("No recommendations found for the selected basket.")
 
