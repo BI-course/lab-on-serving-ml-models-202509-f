@@ -245,6 +245,8 @@ with tab3:
         loaded_rules = recommender_rules
         clean_loaded_rules = normalize_the_rules( loaded_rules)
 
+        st.write(clean_loaded_rules)
+
         recommendations = dynamic_recommender_intermediate(basket, clean_loaded_rules)
 
         st.success(f"Recommendations: {recommendations}")
