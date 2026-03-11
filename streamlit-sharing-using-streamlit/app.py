@@ -14,6 +14,9 @@ svmmodel = joblib.load("./model/support_vector_classifier_optimum.pkl")
 decisiontree_regressor_optimum = joblib.load('./model/decisiontree_regressor_optimum.pkl')
 label_encoders_1b = joblib.load('./model/label_encoders_1b.pkl')
 
+#load rules
+recommender_rules = pd.read_csv("./rules/top_rules_7b.csv")
+
 
 # Streamlit page config
 
@@ -29,14 +32,15 @@ st.set_page_config(
 
 st.title("Dashboard")
 
-st.header("Chosen Customer Churn and Predict Profit")
+st.header("Chosen Customer Churn, Predict Profit & Recommender")
 
 # -----------------------------
 # Tabs for different models
 # -----------------------------
-tab1, tab2 = st.tabs([
+tab1, tab2, tab3 = st.tabs([
     "Customer Churn",
-    "Predict Profit"
+    "Predict Profit",
+    "Recommender Rules"
 ])
 
 # -----------------------------
@@ -162,3 +166,85 @@ with tab2:
 
         st.success(f"Prediction Profit: {prediction_regressor}")
         #st.subheader(f"Predicted Percentage Profit per Unit: {prediction_regressor:.2f}%")
+
+# -----------------------------
+# Recommender
+# -----------------------------
+
+def normalize_the_rules(loaded_rules):
+   
+    def convert_to_frozenset(text):
+        if isinstance(text, frozenset):
+            return frozenset(i.lower().strip() for i in text)
+        elif isinstance(text, str):
+            # Convert string like "frozenset({'whole milk', 'other vegetables'})"
+            import ast
+            return frozenset(i.lower().strip() for i in ast.literal_eval(text.replace("frozenset", "")))
+        else:
+            raise ValueError("Unexpected type in rules")
+    
+    loaded_rules['antecedents'] = loaded_rules['antecedents'].apply(convert_to_frozenset)
+    loaded_rules['consequents'] = loaded_rules['consequents'].apply(convert_to_frozenset)
+    
+    return loaded_rules
+
+def dynamic_recommender_intermediate(cart, rules_df):
+    # Convert cart to set for subset matching
+    cart_set = set(i.lower().strip() for i in cart)
+
+    matching_rules = rules_df[
+        rules_df['antecedents'].apply(lambda x: set(x).issubset(cart_set))
+    ]
+
+    # If no rules match
+    if matching_rules.empty:
+        return "No recommendation available."
+    
+    # Sort rules by confidence (highest first)
+    matching_rules = matching_rules.sort_values(by='confidence', ascending=False)
+    
+    
+    # Collect recommendations with ranking
+    recommendations = []
+    seen_items = set()
+    
+    for _, row in matching_rules.iterrows():
+        for item in row['consequents']:
+            # Avoid recommending items already in cart
+            if item not in cart_set and item not in seen_items:
+                recommendations.append(item)
+                seen_items.add(item)
+    
+    # If all consequents were already in cart
+    if not recommendations:
+        return "No recommendation available."
+    
+    return recommendations
+
+with tab3:
+
+    st.write("Association rule-based product suggestions.")
+
+    with st.form("recommender_form"):
+
+        
+
+        # Simple multi-select for mockup
+        all_items = ["whole milk", "yogurt", "rolls/buns", "soda", "bottled water", "tropical fruit"]
+        basket = st.multiselect("Select items in basket", all_items)
+
+
+        submit_recommendations = st.form_submit_button("Get Recommendations")
+
+    if submit_recommendations:
+
+        #we have to clean the rules first as the frozen set part affects it
+        loaded_rules = recommender_rules
+        clean_loaded_rules = normalize_the_rules( loaded_rules)
+
+        recommendations = dynamic_recommender_intermediate(basket, clean_loaded_rules)
+
+        st.success(f"Recommendations: {recommendations}")
+
+
+
