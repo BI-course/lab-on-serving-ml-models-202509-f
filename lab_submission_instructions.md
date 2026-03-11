@@ -6,21 +6,24 @@
 
 **Name of the team on GitHub Classroom:**
 
-**Member 1:**
+**Member 1**
 
-| **Details**                                                                                                                           | **Comment** |
-|:--------------------------------------------------------------------------------------------------------------------------------------|:------------|
-| **Student ID**                                                                                                                        |             |
-| **Name**                                                                                                                              |             |
-| **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |             |
+| **Details**                                                                                        | **Comment** |
+|:---------------------------------------------------------------------------------------------------|:------------|
+| **Student ID:**                                                                                    |   141553         |
+| **Name:**                                                                                          | Daniella Akinyi |
+| **What part of the lab did you personally contribute to,** <br>**and what did you learn from it?** | Web Interface: Create the basic HTML, CSS, and Vanilla JavaScript pages that allow users to test the API endpoints directly from a browser..             |
 
-**Member 2:**
+**Member 2**
 
-| **Details**                                                                                                                           | **Comment** |
-|:--------------------------------------------------------------------------------------------------------------------------------------|:------------|
-| **Student ID**                                                                                                                        |             |
-| **Name**                                                                                                                              |             |
-| **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |             |
+| **Details**                                                                                        | **Comment** |
+|:---------------------------------------------------------------------------------------------------|:------------|
+| **Student ID:**                                                                                    |   151657         |
+| **Name:**                                                                                          | Memusi Robi |
+| **What part of the lab did you personally contribute to,** <br>**and what did you learn from it?** | Update api.py: Implement the POST endpoints for the Naive Bayes, kNN, SVM, and Random Forest classifiers.
+
+Implement Advanced Logic: Add the endpoints for the k-Means cluster prediction and the Apriori-based product recommender. |
+
 
 **Member 3:**
 
@@ -28,7 +31,9 @@
 |:--------------------------------------------------------------------------------------------------------------------------------------|:------------|
 | **Student ID**                                                                                                                        |   069672          | 
 | **Name**                                                                                                                              |     Starford Rangona        |
-| **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |      the Streamlit Application and added Customer Churn, Predict Profit & Recommender        |
+| **What part of the lab did you personally<br/>contribute to (provide a link to the<br/>branch(es)), and what did you learn from it?** |      the Streamlit Application and added Customer Churn, Predict Profit & Recommender. Finish the Dockerization: Create the Dockerfile to package the Flask app with Gunicorn.
+
+Reverse Proxy: Configure Nginx as a shield for the Gunicorn server. |
 
 
 
