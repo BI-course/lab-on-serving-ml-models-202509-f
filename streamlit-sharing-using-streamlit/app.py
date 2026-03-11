@@ -230,7 +230,7 @@ with tab3:
         
 
         # Simple multi-select for mockup
-        all_items = ["whole milk", "yogurt", "rolls/buns", "soda", "bottled water", "tropical fruit"]
+        all_items = ["whole milk", "yogurt", "rolls/buns", "soda", "bottled water", "tropical fruit", "root vegetables","whipped/sour cream", "other vegetables", ]
         #basket = st.multiselect("Select items in basket", all_items)
         basket = list(st.multiselect("Select items in basket", all_items))
 
@@ -239,17 +239,25 @@ with tab3:
 
     if submit_recommendations:
 
-        st.write(basket)
+        #st.write(basket)
 
         #we have to clean the rules first as the frozen set part affects it
         loaded_rules = recommender_rules
         clean_loaded_rules = normalize_the_rules( loaded_rules)
 
-        st.write(clean_loaded_rules)
+        #st.write(clean_loaded_rules)
 
         recommendations = dynamic_recommender_intermediate(basket, clean_loaded_rules)
 
-        st.success(f"Recommendations: {recommendations}")
+        st.success(f"Basket contains {len(basket)} item(s): {', '.join(basket)}")
+        
+        if recommendations:
+            st.subheader("Recommended Items")
+            st.write(", ".join(recommendations))
+        else:
+            st.warning("No recommendations found for the selected basket.")
+
+        
 
 
 
